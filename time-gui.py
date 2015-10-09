@@ -41,21 +41,10 @@ if __name__ == "__main__":
     # Create an Entry Widget in textFrame
     e1 = Entry(textFrame)
     e1.bind("<Key>", validateTextInputSize)
-    e1["width"] = 2
+    e1["width"] = 5
     e1.grid(row=0, column=1)
-    e1.insert(0, "6")
+    e1.insert(0, "6:00")
     e1.config(bg="white")
-    
-    l2 = Label(textFrame)
-    l2["text"] = ":"
-    l2.grid(row=0, column=2)
-    
-    e2 = Entry(textFrame)
-    e2.bind("<Key>", validateTextInputSize)
-    e2["width"] = 2
-    e2.grid(row=0, column=3)
-    e2.insert(0, "00")
-    e2.config(bg="white")
     
     #Create a Label in textFrame
     l3 = Label(textFrame)
@@ -65,21 +54,10 @@ if __name__ == "__main__":
     # Create an Entry Widget in textFrame
     e3 = Entry(textFrame)
     e3.bind("<Key>", validateTextInputSize)
-    e3["width"] = 2
+    e3["width"] = 5
     e3.grid(row=1, column=1)
-    e3.insert(0, "8")
+    e3.insert(0, "8:00")
     e3.config(bg="white")
-    
-    l4 = Label(textFrame)
-    l4["text"] = ":"
-    l4.grid(row=1, column=2)
-    
-    e4 = Entry(textFrame)
-    e4.bind("<Key>", validateTextInputSize)
-    e4["width"] = 2
-    e4.grid(row=1, column=3)
-    e4.insert(0, "00")
-    e4.config(bg="white")
 
     l5 = Label(textFrame)
     l5["text"] = "And lunch? :"
