@@ -47,32 +47,32 @@ if __name__ == "__main__":
     e1.config(bg="white")
     
     #Create a Label in textFrame
-    l3 = Label(textFrame)
-    l3["text"] = "How long will you work?:"
-    l3.grid(row=1, column=0)
+    l2 = Label(textFrame)
+    l2["text"] = "How long will you work?:"
+    l2.grid(row=1, column=0)
     
     # Create an Entry Widget in textFrame
+    e2 = Entry(textFrame)
+    e2.bind("<Key>", validateTextInputSize)
+    e2["width"] = 5
+    e2.grid(row=1, column=1)
+    e2.insert(0, "8:00")
+    e2.config(bg="white")
+
+    l3 = Label(textFrame)
+    l3["text"] = "And lunch? :"
+    l3.grid(row=1, column=4)
+    
     e3 = Entry(textFrame)
     e3.bind("<Key>", validateTextInputSize)
-    e3["width"] = 5
-    e3.grid(row=1, column=1)
-    e3.insert(0, "8:00")
+    e3["width"] = 2
+    e3.grid(row=1, column=5)
+    e3.insert(0, "30")
     e3.config(bg="white")
-
-    l5 = Label(textFrame)
-    l5["text"] = "And lunch? :"
-    l5.grid(row=1, column=4)
     
-    e5 = Entry(textFrame)
-    e5.bind("<Key>", validateTextInputSize)
-    e5["width"] = 2
-    e5.grid(row=1, column=5)
-    e5.insert(0, "30")
-    e5.config(bg="white")
-    
-    l6 = Label(textFrame)
-    l6["text"] = "minutes"
-    l6.grid(row=1, column=6)
+    l4 = Label(textFrame)
+    l4["text"] = "minutes"
+    l4.grid(row=1, column=6)
     
     textFrame.pack()
     
