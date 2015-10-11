@@ -163,24 +163,25 @@ def tick1():
     time_lost1 = dt.datetime.strptime(str(time_working), str(fmt)) - dt.datetime.strptime(str(time_lost), str(fmt))
     time_home = dt.datetime.strptime(str(t_now), str(fmt)) + time_lost1
     time_print = dt.datetime.time(time_home)
+    showtime = time_lost1 - dt.datetime.timedelta.days(time_lost1)
 
-def convert_timedelta(duration):
-    days, seconds = duration.days, duration.seconds
-    hours = days * 24 + seconds // 3600
-    minutes = (seconds % 3600) // 60
-    seconds = (seconds % 60)
-    return hours, minutes, seconds
+#    def convert_timedelta(duration):
+#    days, seconds = duration.days, duration.seconds
+#    hours = days * 24 + seconds // 3600
+#    minutes = (seconds % 3600) // 60
+#    seconds = (seconds % 60)
+#    return hours, minutes, seconds
 
-    hours, minutes, seconds = convert_timedelta(time_lost1)
+#    hours, minutes, seconds = convert_timedelta(time_lost1)
 
 #exceptions handling - need work!    
-    while True:
-            set1 = int(time_lost1.days)
-            if set1 < 0:
-                print_finished = "Go Home"
-            else: 
-                print_finished = hours + ":" + minutes + ":" + seconds
-            break
+#    while True:
+#            set1 = int(time_lost1.days)
+#            if set1 < 0:
+#                print_finished = "Go Home"
+#            else: 
+#                print_finished = hours + ":" + minutes + ":" + seconds
+#            break
         
     if print_finished != showtime["text"]:
         showtime["text"] = print_finished
