@@ -22,9 +22,28 @@ def displayText():
     else:
         tkMessageBox.showinfo("Tkinter Entry Widget", "Text value =" + entryWidget.get().strip()) 
 
+def bQuit():
+    name = quit()
+    print (name)
+    
+def About():
+    print ("This is a simple example of a menu")
+
 if __name__ == "__main__":
 
     main = Tk()
+
+    menu = Menu(main)
+    main.config(menu=menu)
+    filemenu = Menu(menu)
+    menu.add_cascade(label="File", menu=filemenu)
+    filemenu.add_command(label="Exit", command=main.quit)
+
+    helpmenu = Menu(menu)
+    menu.add_cascade(label="Help", menu=helpmenu)
+    helpmenu.add_command(label="About...", command=About)
+    
+    TEXT_MAXINPUTSIZE = 5
     
     main.title("Main Widget")
     main["padx"] = 40
@@ -32,7 +51,8 @@ if __name__ == "__main__":
     
     # Create a text frame to hold the text Label and the Entry widget
     textFrame = Frame(main)
-
+    textFrame.pack()
+    
     #Create a Label in textFrame
     l1 = Label(textFrame)
     l1["text"] = "Enter time of arrival:"
@@ -76,68 +96,95 @@ if __name__ == "__main__":
     
     textFrame.pack()
     
-def getTime()
-
-    now = dt.datetime.now
-    h1 = str(now.hour) 
-    m1 = str(now.minute) 
-    s1 = str(now.second) 
-
-    # arrival time 
-    while True: 
-        try: 
-            t_in =str(e1.get()) 
-            t_in_h, t_in_m = t_in.split(':')  
-            val1 = int(t_in_h) 
-            val2 = int(t_in_m) 
-            break 
-        except (ValueError): 
-            t_in_h = "06" 
-            t_in_m = "00" 
-            #print("No or wrong input - using standard time - 6:00") 
-        break 
-
-    # work time     
-    while True: 
-        try: 
-            t_work = str(e2.get()) 
-            t_work_h, t_work_m = t_work.split(':')  
-            val3 = int(t_work_h) 
-            val4 = int(t_work_m) 
-        except (ValueError): 
-            t_work_h = "08" 
-            t_work_m = "00" 
-            #print("No or wrong input - using standard time - 8:00") 
-        break 
-    
-    # lunch break 
-    while True:
-        try:
-            t_lunch1 = int(e3.get()) 
-        except (ValueError): 
-            t_lunch1 = int("30") 
-        break 
-
-    #variables preparation 
-    t_now = h1 + ":" + m1 + ":" + s1 
-    t_ar= t_in_h + ":" + t_in_m + ":00" 
-    t_m = dt.timedelta(minutes=int(t_work_m)) + dt.timedelta(minutes=int(t_lunch1)) 
-    t_w_h, t_w_m, t_w_s = str(t_m).split(':') 
-    time_working = str(int(t_work_h) + int(t_w_h)) + ":" + str(t_w_m) + ":00" 
-    fmt = '%H:%M:%S' 
-    
-    #time values calculation and check 
-    time_lost = dt.datetime.strptime(str(t_now), str(fmt)) - dt.datetime.strptime(t_ar, fmt) 
-    time_lost1 = dt.datetime.strptime(str(time_working), str(fmt)) - dt.datetime.strptime(str(time_lost), str(fmt)) 
-    time_home = dt.datetime.strptime(str(t_now), str(fmt)) + time_lost1 
-    time_print = dt.datetime.time(time_home) 
-    
 clock = Label(main, font=('times', 20, 'bold'), bg='green')
 clock.pack(fill=BOTH, expand=1)
+
 def tick():
-    s = dt.datetime.time(time_home) 
+    s = time.strftime('%H:%M:%S') 
     if s != clock["text"]:
         clock["text"] = s
     clock.after(200, tick)
 tick()
+
+showtime = Label(main, font=('times', 20, 'bold'), bg='yellow')
+showtime.pack(fill=BOTH, expand=1)
+
+def tick1():
+    now = dt.datetime.now()
+    h1 = str(now.hour)
+    m1 = str(now.minute)
+    s1 = str(now.second)
+
+# arrival time
+    while True:
+        try:
+            t_in =str(e1.get())
+            t_in_h, t_in_m = t_in.split(':') 
+            val1 = int(t_in_h)
+            val2 = int(t_in_m)
+            break
+        except (ValueError):
+            t_in_h = "06"
+            t_in_m = "00"
+        break
+    
+# work time    
+    while True:
+        try:
+            t_work = str(e2.get())
+            t_work_h, t_work_m = t_work.split(':') 
+            val3 = int(t_work_h)
+            val4 = int(t_work_m)
+            break
+        except (ValueError):
+            t_work_h = "08"
+            t_work_m = "00"
+        break
+    
+# lunch break
+    while True:
+        try:
+            t_lunch = e3.get()
+            break
+        except (ValueError):
+            t_lunch = "30"
+        break
+    
+#variables preparation
+    t_now = h1 + ":" + m1 + ":" + s1
+    t_ar= t_in_h + ":" + t_in_m + ":00"
+    t_m = dt.timedelta(minutes=int(t_work_m)) + dt.timedelta(minutes=int(t_lunch))
+    t_w_h, t_w_m, t_w_s = str(t_m).split(':')
+    time_working = str(int(t_work_h) + int(t_w_h)) + ":" + str(t_w_m) + ":00"
+    fmt = '%H:%M:%S'
+
+#time values calculation and check
+    time_lost = dt.datetime.strptime(str(t_now), str(fmt)) - dt.datetime.strptime(t_ar, fmt)
+    time_lost1 = dt.datetime.strptime(str(time_working), str(fmt)) - dt.datetime.strptime(str(time_lost), str(fmt))
+    time_home = dt.datetime.strptime(str(t_now), str(fmt)) + time_lost1
+    time_print = dt.datetime.time(time_home)
+
+def convert_timedelta(duration):
+    days, seconds = duration.days, duration.seconds
+    hours = days * 24 + seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = (seconds % 60)
+    return hours, minutes, seconds
+
+    hours, minutes, seconds = convert_timedelta(time_lost1)
+
+#exceptions handling - need work!    
+    while True:
+            set1 = int(time_lost1.days)
+            if set1 < 0:
+                print_finished = "Go Home"
+            else: 
+                print_finished = hours + ":" + minutes + ":" + seconds
+            break
+        
+    if print_finished != showtime["text"]:
+        showtime["text"] = print_finished
+        showtime.after(200, tick1)
+tick1()
+
 main.mainloop()
