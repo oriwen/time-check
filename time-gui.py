@@ -28,6 +28,12 @@ def bQuit():
     
 def About():
     print ("This is a simple example of a menu")
+    
+def AddTime():
+    #insert function to add 1 and 15 minutes
+    
+def SubTime():
+    #insert function to substract 1 and 15 minutes
 
 if __name__ == "__main__":
 
@@ -65,6 +71,11 @@ if __name__ == "__main__":
     e1.grid(row=0, column=1)
     e1.insert(0, "6:00")
     e1.config(bg="white")
+   
+    #Button to add time to e1
+    b1 = Button(textFrame, text="UP")
+    b1.grid(row=0, column=2)
+    b1.config(command=AddTime)
     
     #Create a Label in textFrame
     l2 = Label(textFrame)
