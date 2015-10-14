@@ -4,6 +4,7 @@ import sys
 import datetime as dt
 from datetime import timedelta
 
+# Call to restrict maximum number of characters in entry field
 def validateTextInputSize(event):
     """ Method to Validate Entry text input size """
 
@@ -22,19 +23,20 @@ def displayText():
     else:
         tkMessageBox.showinfo("Tkinter Entry Widget", "Text value =" + entryWidget.get().strip()) 
 
+# quit and save button - to be done
+def bQuits():
+    name = quit()
+    print (name)
+
+# quit button
 def bQuit():
     name = quit()
     print (name)
-    
+
+# about button - to be done
 def About():
     print ("This is a simple example of a menu")
     
-def AddTime():
-    #insert function to add 1 and 15 minutes
-    
-def SubTime():
-    #insert function to substract 1 and 15 minutes
-
 if __name__ == "__main__":
 
     main = Tk()
@@ -106,7 +108,16 @@ if __name__ == "__main__":
     l4.grid(row=1, column=6)
     
     textFrame.pack()
-    
+
+# adding 1 or 15 minutes to time specified - to be done
+def AddTime():
+    #insert function to add 1 and 15 minutes
+
+# substracting 1 or 15 minutes to time specified - to be done   
+def SubTime():
+    #insert function to substract 1 and 15 minutes
+
+# Just clock    
 clock = Label(main, font=('times', 20, 'bold'), bg='green')
 clock.pack(fill=BOTH, expand=1)
 
@@ -117,6 +128,7 @@ def tick():
     clock.after(200, tick)
 tick()
 
+# Display time left in work
 showtime = Label(main, font=('times', 20, 'bold'), bg='yellow')
 showtime.pack(fill=BOTH, expand=1)
 
