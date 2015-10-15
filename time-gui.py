@@ -33,9 +33,13 @@ def bQuit():
     name = quit()
     print (name)
 
-# about button - to be done
+# about button - to be checked
 def About():
-    print ("This is a simple example of a menu")
+    about = Toplevel()
+    about.title("About")
+    toplevel.focus_set()
+    inside = Label(t, text= "Go Home program\n \n Version 0.1 alpha\n \n How to use:\n Adjust time value by clicking on it.\n Left-click to add 1 minute\n Shift+Left-click to add 15 minutes\n Right-click to substract 1 minute\n Shift+Right-click to substract 15 minutes\n")
+    inside.pack(side="top", fill="both")
     
 if __name__ == "__main__":
 
