@@ -1,11 +1,13 @@
 # Go Home
 
 Disclaimer:
+
 This is software unencumbered by copyright, see copyright.txt for details.
 Use on your own risk, I will not take any responsibility for damage done to your computer.
 You can find source-code on https://github.com/oriwen/time-check, you will always find last version there. Do not trust this software if you got it from other source.
 
 Introduction: 
+
 This is my training project, it aims to be app that can show you when you can leave work.
 
 Features:
