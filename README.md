@@ -17,6 +17,7 @@ Features:
 Planned features:
 - Saving last session
 - Connecting directly to WATT system
+- Android version
 
 Instructions:
 You can change time values by clicking on them
@@ -24,4 +25,8 @@ You can change time values by clicking on them
   - Shift+ Left-click to add 15 minutes
   - Right-click to substract 1 minute
   - Shift+ Right-click to substract 15 minutes
+
+Versions/Changelog:  
+- v1.0 - Original script without GUI
+- v2.0 - First release 
 
