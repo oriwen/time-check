@@ -258,7 +258,7 @@ def About():
 if __name__ == "__main__":
 
     main = Tk()
-
+    main.resizable = (width = FALSE, height = FALSE)
     menu = Menu(main)
     main.config(menu=menu)
     filemenu = Menu(menu)
