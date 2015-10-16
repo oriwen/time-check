@@ -15,6 +15,7 @@ Features:
 - Minimalistic
 
 Planned features:
+- Clock changing color according to remaining time 
 - Saving last session
 - Connecting directly to WATT system
 - Android version
