@@ -4,7 +4,9 @@ import sys
 import datetime as dt
 from datetime import timedelta
 
-ABOUT_TEXT = "Go Home program\n \n Version 2.0 beta\n \n How to use:\n Adjust time value by clicking on it.\n Left-click to add 1 minute\n Shift+Left-click to add 15 minutes\n Right-click to substract 1 minute\n Shift+Right-click to substract 15 minutes\n"
+ABOUT_TEXT = "Go Home program\n \n Version 2.0 beta\n \n Created by Adam Slivka \n \n For more information see README.TXT"
+LICENCE_TEXT = "This program is released under Unlicence\n \n Free and without crap\n For more information see LICENCE.TXT \n Enjoy "
+HOWTO_TEXT = "How to use:\n Adjust time value by clicking on it.\n Left-click to add 1 minute\n Shift+Left-click to add 15 minutes\n Right-click to substract 1 minute\n Shift+Right-click to substract 15 minutes\n"
 
 #Global variables
     #Entry widget number
@@ -254,6 +256,22 @@ def About():
     inside.pack(side="top", fill="both")
     leave = Button (about, text="I GET IT", command=about.destroy)
     leave.pack(side="bottom", fill="both")
+    
+def Licence():
+    licence = Toplevel()
+    licence.title("Licence")
+    inside = Label(licence, text=LICENCE_TEXT )
+    inside.pack(side="top", fill="both")
+    leave = Button (licence, text="I GET IT", command=licence.destroy)
+    leave.pack(side="bottom", fill="both")
+    
+def Howto():
+    howto = Toplevel()
+    howto.title("Howto")
+    inside = Label(howto, text=HOWTO_TEXT )
+    inside.pack(side="top", fill="both")
+    leave = Button (howto, text="I GET IT", command=howto.destroy)
+    leave.pack(side="bottom", fill="both")
 
 if __name__ == "__main__":
 
@@ -268,7 +286,8 @@ if __name__ == "__main__":
     helpmenu = Menu(menu)
     menu.add_cascade(label="Help", menu=helpmenu)
     helpmenu.add_command(label="About...", command=About)
-    
+    helpmenu.add_command(label="Licence...", command=Licence)
+    helpmenu.add_command(label="Howto...", command=Howto)
     
     main.title("Go Home!")
     main["padx"] = 2
