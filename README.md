@@ -13,10 +13,10 @@ This is my training project, it aims to be app that can show you when you can le
 Features:
 - You can specify time of arrival, lenght of work, lunch break
 - Minimalistic
+- Saving a session
 
 Planned features:
 - Clock changing color according to remaining time 
-- Saving last session
 - Connecting directly to WATT system
 - Android version
 
