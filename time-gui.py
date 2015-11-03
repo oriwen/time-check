@@ -1,10 +1,11 @@
 import tkinter as tk
-from tkinter import ttk
 import time
 import sys
 import datetime as dt
 from datetime import timedelta
-import shelve
+import os.path
+import configparser
+from tkinter import colorchooser
 
 #Global variables
     #Entry widget number
@@ -17,7 +18,7 @@ def popupmsg():
     popup.wm_title("!")
     label = tk.Label(popup, text="Not yet implemented")
     label.pack(side="top", fill="x", pady=10)
-    B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
+    B1 = tk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack()
     popup.mainloop()
     
@@ -26,7 +27,7 @@ def popupabout():
     popup.wm_title("About")
     label = tk.Label(popup, text="Go Home! v2.0Beta2 \n \n created by Adam Slivka \n \n For licence see LICENCE.TXT \n For detailed info about program, controls and \n all its parts see README.TXT and User_manual.rtf")
     label.pack(side="top", fill="x", pady=10)
-    B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
+    B1 = tk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack()
     popup.mainloop() 
     
@@ -38,21 +39,29 @@ class TimeWindow(tk.Tk):
         
         tk.Tk.wm_title(self, "Go Home! Testing version")
  
-#This may work on windows...must try.... 
-        cvar1m = tk.IntVar()
+        cvar1 = 0
         
-        try:
-            safem = shelve.open("config")
-            cvar1_tempm = safem["1s"]
-            cvar1m.set(cvar1_tempm)
-            safem.close()
-        except AttributeError:
+        fname = "config.ini"
+        checkconfig = os.path.isfile(fname)
+        
+        if checkconfig == True:
             pass
+        else:
+            config = configparser.ConfigParser()
+            config["preset"] = {"arrival_time":"6:00", "work_time":"8:00","lunch_break":"30"}
+            config['setup'] = {"Stay_on_top":"1"}
+            config['visual'] = {"color1":"green","color2":"yellow" }
+            with open('config.ini', 'w') as configfile:
+                config.write(configfile)
         
- #       if cvar1_tempm == 1:
- #           tk.Tk.wm_attributes("-topmost", 1)
- #       else:
- #           pass
+        config = configparser.ConfigParser()
+        config.read("config.ini")
+        cvar1 = int(config["setup"]["stay_on_top"])
+        
+        if cvar1 == 1:
+            tk.Tk.wm_attributes(self, "-topmost", 1)
+        else:
+            pass
         
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
@@ -127,7 +136,7 @@ class MainWindow(tk.Frame):
                 v2_h = v1_h1
                 v2_m = v1_m1
   
-            time_add = (str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3]
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
     
             if enum == 1:
                 ev1.set(time_add)
@@ -154,7 +163,7 @@ class MainWindow(tk.Frame):
                 v2_h = v1_h1
                 v2_m = v1_m1
         
-            time_add = (str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3]
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
         
             if enum == 1:
                 ev1.set(time_add)
@@ -182,7 +191,7 @@ class MainWindow(tk.Frame):
                 v2_h = v1_h1
                 v2_m = v1_m1
         
-            time_add = (str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3]
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
         
             if enum == 1:
                 ev1.set(time_add)
@@ -210,7 +219,7 @@ class MainWindow(tk.Frame):
                 v2_h = v1_h1
                 v2_m = v1_m1
         
-            time_add = (str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3]
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
         
             if enum == 1:
                 ev1.set(time_add)
@@ -227,7 +236,7 @@ class MainWindow(tk.Frame):
             else:
                 v2_m = 59
   
-            time_add = (str(dt.timedelta(minutes=v2_m)))[2:-3]
+            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
             ev3.set(time_add)
     
         def AddTime15m(self):
@@ -239,7 +248,7 @@ class MainWindow(tk.Frame):
             else:
                 v2_m = 59
         
-            time_add = (str(dt.timedelta(minutes=v2_m)))[2:-3]
+            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
             ev3.set(time_add)
     
         def SubTime1m(self):
@@ -251,7 +260,7 @@ class MainWindow(tk.Frame):
             else:
                 v2_m = v1_m1
         
-            time_add = (str(dt.timedelta(minutes=v2_m)))[2:-3]
+            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
             ev3.set(time_add)
     
         def SubTime15m(self):
@@ -263,7 +272,7 @@ class MainWindow(tk.Frame):
             else:
                 v2_m = v1_m1
         
-            time_add = (str(dt.timedelta(minutes=v2_m)))[2:-3]
+            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
             ev3.set(time_add)
                 
         def AddTime1c(self):
@@ -299,11 +308,13 @@ class MainWindow(tk.Frame):
             button6.grid_forget()
             
         def savetime():
-            safetime = shelve.open("config")
-            safetime["1e"] = ev1.get()
-            safetime["2e"] = ev2.get()
-            safetime["3e"] = ev3.get()
-            safetime.close()
+            config = configparser.ConfigParser()
+            config.read("config.ini")
+            config.set("preset", "arrival_time", e1.get())
+            config.set("preset", "work_time", e2.get())
+            config.set("preset", "lunch_break", e3.get())
+            with open("config.ini", "w") as configfile:
+                config.write(configfile)
         
         l1 = tk.Label(self, text="You have arrived at: ")
         l1.grid(row=0, column=0)
@@ -376,19 +387,18 @@ class MainWindow(tk.Frame):
         timeleft.configure(text="Sample", bg="yellow", font=("Font",20))
         timeleft.grid(row=3, columnspan=7, sticky="nsew")
         
-        try:
-            safetime = shelve.open("config")
-            ev1_time = safetime["1e"]
-            ev2_time = safetime["2e"]
-            ev3_time = safetime["3e"]
-            ev1.set(ev1_time)
-            ev2.set(ev2_time)
-            ev3.set(ev3_time)
-            safetime.close()
-        except AttributeError:
-            pass
-        except KeyError:
-            pass
+        config = configparser.ConfigParser()
+        config.read("config.ini")
+        ev1_time = (config["preset"]["arrival_time"])
+        ev2_time = (config["preset"]["work_time"])
+        ev3_time = (config["preset"]["Lunch_break"])
+        ev1.set(ev1_time)
+        ev2.set(ev2_time)
+        ev3.set(ev3_time)
+        color1_temp = str((config["visual"]["color1"]))
+        color2_temp = str((config["visual"]["color2"]))
+        timeathome.configure(bg=color1_temp)
+        timeleft.configure(bg=color2_temp)
         
         def tick1():
             now = dt.datetime.now()
@@ -467,6 +477,11 @@ class MainWindow(tk.Frame):
     
             if print_finished != timeathome:["text"]
             timeathome["text"] = time_print
+            
+# Must check under windows......
+            
+            if tk.Tk.wm_state(controller) == "iconic":
+                tk.Tk.wm_state(controller, "icon")
 
         tick1()
                 
@@ -475,33 +490,97 @@ class SetupWindow(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
-        global cvar1
         cvar1 = tk.IntVar()
+        color1 = tk.StringVar()
+        color2 = tk.StringVar()
                 
         def save():
-            safe = shelve.open("config")
-            safe["1s"] = cvar1.get()
-            safe.close()
+            config = configparser.ConfigParser()
+            config.read("config.ini")
+            config.set("setup", "stay_on_top", str(cvar1.get()))
+            config.set("visual", "color1", str(color1.get()))
+            config.set("visual", "color2", str(color2.get()))
+            with open("config.ini", "w") as configfile:
+                config.write(configfile)
+                
+        def reset():
+            python = sys.executable
+            os.execl(python, python, * sys.argv)
             
-        label = tk.Label(self, text="Here I will add configuration options")
-        label.grid(row=0, column=0)
+        def save_reset():
+            save()
+            reset()
         
-        cbutton1 = tk.Checkbutton(self, text="Stay on top", variable=cvar1)
-        cbutton1.grid(row=1, column=0)        
+        def showsystem():
+            cbutton1.grid(row=2, columnspan=4, sticky="w")
+            buttons.grid(row=4, column=1, sticky="w")
+            buttonsr.grid(row=4, column=2, sticky="w")
+            button.grid(row=4, column=0, sticky="w")
+            label.configure(text="Note that configuration will take effect after restart")
+            label.grid(row=3, columnspan=7)
+            buttonc1.grid_forget()
+            buttonc2.grid_forget()
+            labelc1.grid_forget()
+            labelc2.grid_forget()
+            
+        def showvisual():
+            label.configure(text="Note that configuration will take effect after restart")
+            cbutton1.grid_forget()
+            buttonc1.grid(row=2, column=0, sticky="w")
+            buttonc2.grid(row=3, column=0, sticky="w")
+            labelc1.grid(row=2, column=1, sticky="w")
+            labelc2.grid(row=3, column=1, sticky="w")
+            buttons.grid(row=5, column=1, sticky="w")
+            buttonsr.grid(row=5, column=2, sticky="w")
+            label.grid(row=4, columnspan=7)
+            button.grid(row=5, column=0, sticky="w")
+            
+        def color1_choose():
+            colorc1 = colorchooser.askcolor()
+            color1_temp = colorc1[1]
+            labelc1.configure(bg=color1_temp)
+            color1.set(color1_temp)
+            
+        def color2_choose():
+            colorc2 = colorchooser.askcolor()
+            color2_temp = colorc2[1]
+            labelc2.configure(bg=color2_temp)
+            color2.set(color2_temp)
+                
+        selectbutton1 = tk.Button(self, text="System", command=showsystem)
+        selectbutton1.grid(row=1, column=0, sticky="w")
+        
+        selectbutton2 = tk.Button(self, text="Visual", command=showvisual)
+        selectbutton2.grid(row=1, column=1, sticky="w")
+            
+        label = tk.Label(self, text="Select category")
+        label.grid(row=3, columnspan=7)
+        
+        cbutton1 = tk.Checkbutton(self, text="Stay on top", variable=cvar1)        
         
         buttons = tk.Button(self, text="Save", command=save)
-        buttons.grid(row=2, column=1)
+        buttonsr = tk.Button(self, text="Save&Reset", command=save_reset)
         
         button = tk.Button(self, text="Go back", command=lambda: controller.show_frame(MainWindow))
-        button.grid(row=2, column=2)
+        button.grid(row=4, column=0, sticky="w")
         
-        try:
-            safe = shelve.open("config")
-            cvar1_temp = safe["1s"]
-            cvar1.set(cvar1_temp)
-            safe.close()
-        except AttributeError:
-            pass
+        buttonc1 = tk.Button(self, text="Color1", command=color1_choose)
+        buttonc2 = tk.Button(self, text="Color2", command=color2_choose)
+        
+        labelc1 = tk.Label(self, text="14:30")
+        labelc2 = tk.Label(self, text="3:45:56")
+        
+        config = configparser.ConfigParser()
+        config.read("config.ini")
+        cvar1_temp = (config["setup"]["stay_on_top"])
+        cvar1.set(cvar1_temp)
+        color1_temp = str((config["visual"]["color1"]))
+        color2_temp = str((config["visual"]["color2"]))
+        color1.set(color1_temp)
+        color2.set(color2_temp)
+        labelc1.configure(bg=color1_temp)
+        labelc2.configure(bg=color2_temp)
+        
         
 app = TimeWindow()
 app.resizable(0,0)
