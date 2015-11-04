@@ -13,6 +13,15 @@ enum = 0
     #Entry widget value export
 eexp = 0
 
+ABOUT_TEXT ="""
+            Go Home! v2.0Beta2 
+          created by Adam Slivka
+          
+    For licence see LICENCE.TXT 
+    For detailed info about program, 
+    controls and all its parts see README.TXT 
+    and GoHome!_User_manual.pdf"""
+
 def popupmsg():
     popup = tk.Tk()
     popup.wm_title("!")
@@ -25,14 +34,7 @@ def popupmsg():
 def popupabout():
     popup = tk.Tk()
     popup.wm_title("About")
-    label = tk.Label(popup, text="""
-            Go Home! v2.0Beta2 
-          created by Adam Slivka
-          
-    For licence see LICENCE.TXT 
-    For detailed info about program, 
-    controls and all its parts see README.TXT 
-    and GoHome!_User_manual.pdf""")
+    label = tk.Label(popup, text=ABOUT_TEXT)
     label.pack(side="top", fill="x", pady=10)
     B1 = tk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack()
