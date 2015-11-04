@@ -14,6 +14,7 @@ Features:
 - You can specify time of arrival, lenght of work, lunch break
 - Minimalistic
 - Saving a session
+- Configuration
 
 Planned features:
 - Clock changing color according to remaining time 
@@ -26,6 +27,9 @@ You can change time values by clicking on them
   - Shift+ Left-click to add 15 minutes
   - Right-click to substract 1 minute
   - Shift+ Right-click to substract 15 minutes
+
+Known bugs:
+- Locks down when using unreasonably high times.
 
 Versions/Changelog:  
 - v1.0 - Original script without GUI
