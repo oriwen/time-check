@@ -30,8 +30,9 @@ def popupabout():
           created by Adam Slivka
           
     For licence see LICENCE.TXT 
-    For detailed info about program, controls and
-    all its parts see README.TXT and User_manual.rtf""")
+    For detailed info about program, 
+    controls and all its parts see README.TXT 
+    and GoHome!_User_manual.pdf""")
     label.pack(side="top", fill="x", pady=10)
     B1 = tk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack()
