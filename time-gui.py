@@ -59,8 +59,9 @@ class TimeWindow(tk.Tk):
         else:
             config = configparser.ConfigParser()
             config["preset"] = {"arrival_time":"6:00", "work_time":"8:00","lunch_break":"30"}
-            config['setup'] = {"Stay_on_top":"1"}
+            config['setup'] = {"stay_on_top":"1"}
             config['visual'] = {"color1":"green","color2":"yellow" }
+            config['login'] = {"username":"user"}
             with open('config.ini', 'w') as configfile:
                 config.write(configfile)
         
@@ -841,6 +842,12 @@ class LoginWindow(tk.Frame):
             username = str(loginentry.get())
             password = str(passentry.get())
             
+            config = configparser.ConfigParser()
+            config.read("config.ini")
+            config.set("login", "username", loginentry.get())
+            with open("config.ini", "w") as configfile:
+                config.write(configfile)
+            
             cj = cookielib.CookieJar()
             opener = urllib2.build_opener(urllib2.HTTPCookeProcessor(cj))
             urllib2.install_opener(opener)
@@ -920,6 +927,8 @@ class LoginWindow(tk.Frame):
         loginentry = tk.Entry(self)
         loginentry["width"] = 10
         loginentry.grid(row=0, column=2)
+        
+        remember = tk.Checkbutton(self, text="Remember me", variable=rem)
         
         passlabel = tk.Label(self, text="Heslo")
         passlabel.grid(row=1, column=1)
