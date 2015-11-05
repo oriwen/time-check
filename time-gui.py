@@ -6,6 +6,7 @@ from datetime import timedelta
 import os.path
 import configparser
 from tkinter import colorchooser
+import urllib, urllib2, cookielib
 
 #Global variables
     #Entry widget number
@@ -836,6 +837,23 @@ class LoginWindow(tk.Frame):
             passlabel.grid_forget()
             passentry.grid_forget()
             
+        def loginattempt():
+            username = str(loginentry.get())
+            password = str(passentry.get())
+            
+            cj = cookielib.CookieJar()
+            opener = urllib2.build_opener(urllib2.HTTPCookeProcessor(cj))
+            urllib2.install_opener(opener)
+            login_data = urllib.urlencode({"username" : username, "password" : password})
+            url = "http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp"
+            request = urllib2.Request(url, login_data)
+            resp = urllib2.urlopen(request)
+            contents = resp.read()
+            
+        def loginaction_final():
+            loginattempt()
+            loginaction()
+            
         l1 = tk.Label(self, text="You have arrived at: ")
         
         e1 = tk.Entry(self)
@@ -908,10 +926,10 @@ class LoginWindow(tk.Frame):
         
         passentry = tk.Entry(self)
         passentry["width"] = 15
-        passentryl.grid(row=1, column=2)
+        passentry.grid(row=1, column=2)
         
-        Loginbutton = tk.Button(self, text = "Login", command=loginaction)
-        
+        loginbutton = tk.Button(self, text = "Login", command=loginaction_final)
+        loginbutton.grid(row=2, columnspan=2)
         
         config = configparser.ConfigParser()
         config.read("config.ini")
