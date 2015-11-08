@@ -5,8 +5,9 @@ import datetime as dt
 from datetime import timedelta
 import os.path
 import configparser
-from tkinter import colorchooser
-import urllib, urllib2, cookielib
+from tkinter import colorchooser, messagebox
+import urllib, http.cookiejar
+from bs4 import BeautifulSoup
 
 #Global variables
     #Entry widget number
@@ -59,9 +60,9 @@ class TimeWindow(tk.Tk):
         else:
             config = configparser.ConfigParser()
             config["preset"] = {"arrival_time":"6:00", "work_time":"8:00","lunch_break":"30"}
-            config['setup'] = {"stay_on_top":"1"}
+            config['setup'] = {"stay_on_top":"0"}
             config['visual'] = {"color1":"green","color2":"yellow" }
-            config['login'] = {"username":"user"}
+            config['login'] = {"username":"user", "url":"http://czbrq-s-apl007.cz.abb.com:8080/reports/login.jsp"}
             with open('config.ini', 'w') as configfile:
                 config.write(configfile)
         
@@ -609,6 +610,11 @@ class LoginWindow(tk.Frame):
         ev2.set(e2_var)
         ev3.set(e3_var)
         
+        rem_login = tk.IntVar()
+        rem_temp = 0
+        login_OK = 1
+        savedpath = tk.StringVar()
+        
         def Set_Enum_1(self):
             global enum
             enum = 1
@@ -842,24 +848,39 @@ class LoginWindow(tk.Frame):
             username = str(loginentry.get())
             password = str(passentry.get())
             
-            config = configparser.ConfigParser()
-            config.read("config.ini")
-            config.set("login", "username", loginentry.get())
-            with open("config.ini", "w") as configfile:
-                config.write(configfile)
+            if rem_temp == 1:
+                config = configparser.ConfigParser()
+                config.read("config.ini")
+                config.set("login", "username", loginentry.get())
+                with open("config.ini", "w") as configfile:
+                    config.write(configfile)
+            else:
+                pass
             
-            cj = cookielib.CookieJar()
-            opener = urllib2.build_opener(urllib2.HTTPCookeProcessor(cj))
-            urllib2.install_opener(opener)
-            login_data = urllib.urlencode({"username" : username, "password" : password})
-            url = "http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp"
-            request = urllib2.Request(url, login_data)
-            resp = urllib2.urlopen(request)
-            contents = resp.read()
+            try:
+                cj = http.cookiejar.CookieJar()
+                opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+                urllib.request.install_opener(opener)
+                login_data = urllib.parse.urlencode({"username" : username, "password" : password}).encode("utf-8")
+                url = savedpath.get()
+                request = urllib.request.Request(url)
+                with urllib.request.urlopen(request, data=login_data)as resp:
+                    contents = resp.read()
+                    soup = BeautifulSoup(contents, "lxml")
+                    print(soup.prettify())
+            except urllib.error.URLError:
+                messagebox.showerror("Error","Webpage not accesible")
+                login_OK = 0
             
         def loginaction_final():
             loginattempt()
-            loginaction()
+            if login_OK == 0:
+                loginaction()
+            else:
+                pass
+            
+        def rem():
+            pass
             
         l1 = tk.Label(self, text="You have arrived at: ")
         
@@ -879,10 +900,10 @@ class LoginWindow(tk.Frame):
         button2 = tk.Button(self, text="<", fg="red", command=hide_buttons)
         button2.grid(row=0, column=6)
 
-        button3 = tk.Button(self, text="Setup", fg="red", command=lambda: controller.show_frame(SetupWindow))
+        button3 = tk.Button(self, text="Main", fg="red", command=lambda: controller.show_frame(MainWindow))
         button3.grid(row=0, column=7)
         
-        button4 = tk.Button(self, text="Save", fg="red", command=savetime)
+        button4 = tk.Button(self, text="Setup", fg="red", command=lambda: controller.show_frame(SetupWindow))
         button4.grid(row=1, column=7)
         
         button5 = tk.Button(self, text="Login", fg="red", command=popupmsg)
@@ -929,6 +950,7 @@ class LoginWindow(tk.Frame):
         loginentry.grid(row=0, column=2)
         
         remember = tk.Checkbutton(self, text="Remember me", variable=rem)
+        remember.grid(row=0, column=3)
         
         passlabel = tk.Label(self, text="Heslo")
         passlabel.grid(row=1, column=1)
@@ -944,7 +966,7 @@ class LoginWindow(tk.Frame):
         config.read("config.ini")
         ev1_time = (config["preset"]["arrival_time"])
         ev2_time = (config["preset"]["work_time"])
-        ev3_time = (config["preset"]["Lunch_break"])
+        ev3_time = (config["preset"]["lunch_break"])
         ev1.set(ev1_time)
         ev2.set(ev2_time)
         ev3.set(ev3_time)
@@ -952,6 +974,8 @@ class LoginWindow(tk.Frame):
         color2_temp = str((config["visual"]["color2"]))
         timeathome.configure(bg=color1_temp)
         timeleft.configure(bg=color2_temp)
+        savedpath_temp = (config["login"]["url"])
+        savedpath.set(savedpath_temp)
         
         def tick1():
             now = dt.datetime.now()
@@ -1031,13 +1055,14 @@ class LoginWindow(tk.Frame):
             if print_finished != timeathome:["text"]
             timeathome["text"] = time_print
             
-# Must check under windows......
+# Must check under windows......not working right...
             
             if tk.Tk.wm_state(controller) == "iconic":
-                tk.Tk.wm_state(controller, "icon")
+                tk.Tk.iconify()
 
         tick1()
         
 app = TimeWindow()
 app.resizable(0,0)
 app.mainloop()
+
