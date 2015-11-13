@@ -864,6 +864,11 @@ class LoginWindow(tk.Frame):
             soup=BeautifulSoup(content, "lxml")
             table = soup.find('table', {'class': 'data'})
             pretty = table.prettify()
+            # Debug only!
+            file = open("output.html", "w")
+            file.write(pretty)
+            file.close()
+            # End Debug only!
             print(pretty)
             
             if rem_temp == 1:
