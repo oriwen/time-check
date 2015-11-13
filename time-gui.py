@@ -3,11 +3,12 @@ import time
 import sys
 import datetime as dt
 from datetime import timedelta
-import os.path
+import os.path, os
 import configparser
 from tkinter import colorchooser, messagebox
-import urllib, http.cookiejar
 from bs4 import BeautifulSoup
+import lxml
+from selenium import webdriver
 
 #Global variables
     #Entry widget number
@@ -40,8 +41,8 @@ def popupabout():
     label.pack(side="top", fill="x", pady=10)
     B1 = tk.Button(popup, text="Okay", command = popup.destroy)
     B1.pack()
-    popup.mainloop() 
-    
+    popup.mainloop()
+
 class TimeWindow(tk.Tk):
         
     def __init__(self, *args, **kwargs):
@@ -62,7 +63,7 @@ class TimeWindow(tk.Tk):
             config["preset"] = {"arrival_time":"6:00", "work_time":"8:00","lunch_break":"30"}
             config['setup'] = {"stay_on_top":"0"}
             config['visual'] = {"color1":"green","color2":"yellow" }
-            config['login'] = {"username":"user", "url":"http://czbrq-s-apl007.cz.abb.com:8080/reports/login.jsp"}
+            config['login'] = {"username":"user", "url":"http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp"}
             with open('config.ini', 'w') as configfile:
                 config.write(configfile)
         
@@ -845,8 +846,25 @@ class LoginWindow(tk.Frame):
             passentry.grid_forget()
             
         def loginattempt():
-            username = str(loginentry.get())
-            password = str(passentry.get())
+            username = 1610616 #loginentry.get()
+            password = 1610616 #passentry.get()
+            phantom_driver = "/NonEncryptedData/python/data/phantomjs.exe"
+            browser = webdriver.PhantomJS(phantom_driver, service_args=['--ignore-ssl-errors=true'])
+            url = "http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp"
+            browser.get(url)
+            browser.find_element_by_id("uname").clear()
+            browser.find_element_by_id("uname").send_keys(username)
+            browser.find_element_by_id("pass").clear()
+            browser.find_element_by_id("pass").send_keys(password)
+            browser.find_element_by_css_selector('input[type=\"submit\"]').click()
+            url1 = browser.current_url
+            browser.switch_to.frame(browser.find_element_by_name("report"))
+            content = browser.page_source
+            browser.quit()
+            soup=BeautifulSoup(content, "lxml")
+            table = soup.find('table', {'class': 'data'})
+            pretty = table.prettify()
+            print(pretty)
             
             if rem_temp == 1:
                 config = configparser.ConfigParser()
@@ -856,21 +874,7 @@ class LoginWindow(tk.Frame):
                     config.write(configfile)
             else:
                 pass
-            
-            try:
-                cj = http.cookiejar.CookieJar()
-                opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-                urllib.request.install_opener(opener)
-                login_data = urllib.parse.urlencode({"username" : username, "password" : password}).encode("utf-8")
-                url = savedpath.get()
-                request = urllib.request.Request(url)
-                with urllib.request.urlopen(request, data=login_data)as resp:
-                    contents = resp.read()
-                    soup = BeautifulSoup(contents, "lxml")
-                    print(soup.prettify())
-            except urllib.error.URLError:
-                messagebox.showerror("Error","Webpage not accesible")
-                login_OK = 0
+        
             
         def loginaction_final():
             loginattempt()
@@ -1065,4 +1069,3 @@ class LoginWindow(tk.Frame):
 app = TimeWindow()
 app.resizable(0,0)
 app.mainloop()
-
