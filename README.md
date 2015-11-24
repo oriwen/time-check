@@ -11,14 +11,15 @@ Introduction:
 This is my training project, it aims to be app that can show you when you can leave work.
 
 Features:
-- You can specify time of arrival, lenght of work, lunch break
+- login to WATT system
+- You can specify time of arrival, lenght of work, lunch break and time off-work.
 - Minimalistic
 - Saving a session
 - Configuration
 
 Planned features:
+- Monthly hours review (+- balance)
 - Clock changing color according to remaining time 
-- Connecting directly to WATT system
 - Android version
 
 Instructions:
