@@ -1135,7 +1135,7 @@ class LoginWindow(tk.Frame):
             button4.grid(row=1, column=7)
             button5.grid(row=2, column=7)
             button6.grid(row=3, column=7)
-            button_test.grid(row=0, column=6)
+            button_monthly.grid(row=0, column=4)
             timeathome.grid(row=2, columnspan=7, sticky="nsew")
             timeleft.grid(row=3, columnspan=7, sticky="nsew")
             loginlabel.grid_forget()
@@ -1230,7 +1230,6 @@ class LoginWindow(tk.Frame):
             if hours_dis == minutes_watt == 0:
                 time_string = "0:00"
             elif minutes_watt < 0:
-                print("1")
                 hours_f = hours_dis - 1
                 minutes_f = 60 - minutes_watt
                 time_prep = str(hours_f)+":"+str(minutes_f)
@@ -1241,7 +1240,6 @@ class LoginWindow(tk.Frame):
                 else:
                     time_string = "plus "+str(time_print)
             elif minutes_watt >= 0 and hours_dis >= 0 :
-                print("2")
                 hours_f = hours_dis
                 minutes_f = minutes_watt
                 time_prep = str(hours_f)+":"+str(minutes_f)
@@ -1249,7 +1247,6 @@ class LoginWindow(tk.Frame):
                 time_print = time_f.time()
                 time_string = "plus "+str(time_print)
             elif minutes_watt > 0 and hours_dis < 0 :
-                print("3")
                 hours_f = hours_dis + 1
                 minutes_f = 60 - minutes_watt
                 time_prep = str(hours_f)+":"+str(minutes_f)
@@ -1257,7 +1254,6 @@ class LoginWindow(tk.Frame):
                 time_print = "-"+time_f.time()
                 time_string = "minus "+str(time_print)
             elif minutes_watt >= 0 and hours_dis < 0 :
-                print("4")
                 hours_f = abs(hours_dis)
                 minutes_f = minutes_watt
                 time_prep = str(hours_f)+":"+str(minutes_f)
@@ -1265,7 +1261,7 @@ class LoginWindow(tk.Frame):
                 time_print = str(time_f.time())
                 time_string = "minus "+time_print
             else:
-                print("Do a better job...")
+                messagebox.showerror("Month overview", "Error, something is wrong.")
                 
             balance = "Your time balance is "+time_string
             messagebox.showinfo("Month overview", balance)
@@ -1293,8 +1289,9 @@ class LoginWindow(tk.Frame):
         button6 = tk.Button(self, image=image6, fg="red", command=popupabout)
         button6.image = image6
 
-        button_test = tk.Button(self, text="Test", fg="red", command=monthly_overview)
-        button_test.image = image6
+        image_monthly = ImageTk.PhotoImage(file = os.getcwd()+"/data/monthly_r.png")
+        button_monthly = tk.Button(self, image=image_monthly, command=monthly_overview)
+        button_monthly.image = image_monthly
         
         l2 = tk.Label(self)
         l2["text"] = ",will work for:"
