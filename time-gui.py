@@ -1,3 +1,5 @@
+# -*- coding: cp1250 -*-
+
 import tkinter as tk
 import time
 import sys
@@ -9,6 +11,11 @@ from tkinter import colorchooser, messagebox
 from bs4 import BeautifulSoup
 import lxml
 from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
+from PIL import ImageTk, Image
 
 #Global variables
     #Entry widget number
@@ -60,10 +67,10 @@ class TimeWindow(tk.Tk):
             pass
         else:
             config = configparser.ConfigParser()
-            config["preset"] = {"arrival_time":"6:00", "work_time":"8:00","lunch_break":"30"}
+            config["preset"] = {"arrival_time":"6:00", "work_time":"8:00","lunch_break":"0:30"}
             config['setup'] = {"stay_on_top":"0"}
             config['visual'] = {"color1":"green","color2":"yellow" }
-            config['login'] = {"username":"user", "url":"http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp"}
+            config['login'] = {"username":"", "url":"http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp", "remember":"1"}
             with open('config.ini', 'w') as configfile:
                 config.write(configfile)
         
@@ -105,15 +112,18 @@ class MainWindow(tk.Frame):
         
         e1_var = "6:00"
         e2_var = "8:00"
-        e3_var = "30"
+        e3_var = "0:30"
+        e5_var = "0:00"
         
         ev1 = tk.StringVar()
         ev2 = tk.StringVar()
         ev3 = tk.StringVar()
+        ev5 = tk.StringVar()
         
         ev1.set(e1_var)
         ev2.set(e2_var)
         ev3.set(e3_var)
+        ev5.set(e5_var)
         
         def Set_Enum_1(self):
             global enum
@@ -122,13 +132,25 @@ class MainWindow(tk.Frame):
         def Set_Enum_2(self):
             global enum
             enum = 2
+
+        def Set_Enum_3(self):
+            global enum
+            enum = 3
+
+        def Set_Enum_5(self):
+            global enum
+            enum = 5
             
         def export1(self):
             global eexp
             if enum == 1:
                 eexp = str(ev1.get())
-            else:
+            elif enum == 2:
                 eexp = str(ev2.get())
+            elif enum == 3:
+                eexp = str(ev3.get())
+            else:
+                eexp = str(ev5.get())
                 
         def AddTime1(self):
             v1 = eexp
@@ -153,9 +175,28 @@ class MainWindow(tk.Frame):
     
             if enum == 1:
                 ev1.set(time_add)
-    
             else:
                 ev2.set(time_add)
+
+        def AddTime1m(self):
+            v1 = eexp
+            v1_h, v1_m = v1.split(':') 
+            v1_h1 = int(v1_h)
+            v1_m1 = int(v1_m) + 1
+
+            if v1_m1 > 59:
+                v2_h = int(v1_h1 + (v1_m1 // 60))
+                v2_m = int(v1_m1 - 60)
+            else:
+                v2_h = v1_h1
+                v2_m = v1_m1
+                
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
+
+            if enum == 3:
+                ev3.set(time_add)
+            else:
+                ev5.set(time_add)
     
         def AddTime15(self):
             v1 = eexp
@@ -180,9 +221,28 @@ class MainWindow(tk.Frame):
         
             if enum == 1:
                 ev1.set(time_add)
-    
             else:
                 ev2.set(time_add)
+
+        def AddTime15m(self):
+            v1 = eexp
+            v1_h, v1_m = v1.split(':') 
+            v1_h1 = int(v1_h)
+            v1_m1 = int(v1_m) + 15
+    
+            if v1_m1 > 59:
+                v2_h = int(v1_h1 + (v1_m1 // 60))
+                v2_m = int(v1_m1 - 60)
+            else:
+                v2_h = v1_h1
+                v2_m = v1_m1
+        
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
+
+            if enum == 3:
+                ev3.set(time_add)
+            else:
+                ev5.set(time_add)
     
         def SubTime1(self):
             v1 = eexp
@@ -208,9 +268,38 @@ class MainWindow(tk.Frame):
         
             if enum == 1:
                 ev1.set(time_add)
-    
             else:
                 ev2.set(time_add)
+
+        def SubTime1m(self):
+            v1 = eexp
+            v1_h, v1_m = v1.split(':') 
+            v1_h1 = int(v1_h)
+            v1_m1 = int(v1_m) - 1
+    
+            if v1_m1 < 0:
+                v1_m1 = 59
+                v2_h = int(v1_h1 - 1)
+                v2_m = int(v1_m1)
+            else:
+                v2_h = v1_h1
+                v2_m = v1_m1
+
+            if enum == 3:
+                if v1_h1 == 0:
+                    if v1_m1 < 30:
+                        v2_m = 30
+                        v2_h = 0
+                    else:
+                        v2_h = v1_h1
+                        v2_m = v1_m1
+        
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
+
+            if enum == 3:
+                ev3.set(time_add)
+            else:
+                ev5.set(time_add)
     
         def SubTime15(self):
             v1 = eexp
@@ -236,58 +325,39 @@ class MainWindow(tk.Frame):
         
             if enum == 1:
                 ev1.set(time_add)
-    
             else:
                 ev2.set(time_add)
-    
-        def AddTime1m(self):
-            v1 = str(e3.get())
-            v1_m1 = int(v1) + 1
-    
-            if v1_m1 < 59:
-                v2_m = v1_m1
-            else:
-                v2_m = 59
-  
-            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
-            ev3.set(time_add)
-    
-        def AddTime15m(self):
-            v1 =str(e3.get())
-            v1_m1 = int(v1) + 15
-    
-            if v1_m1 < 59:
-                v2_m = v1_m1
-            else:
-                v2_m = 59
-        
-            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
-            ev3.set(time_add)
-    
-        def SubTime1m(self):
-            v1 =str(e3.get())
-            v1_m1 = int(v1) - 1
-    
-            if v1_m1 < 30:
-                v2_m = 30
-            else:
-                v2_m = v1_m1
-        
-            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
-            ev3.set(time_add)
-    
+
         def SubTime15m(self):
-            v1 =str(e3.get())
-            v1_m1 = int(v1) - 15
+            v1 = eexp
+            v1_h, v1_m = v1.split(':') 
+            v1_h1 = int(v1_h)
+            v1_m1 = int(v1_m) - 15
     
-            if v1_m1 < 30:
-                v2_m = 30
+            if v1_m1 < 0:
+                v1_m1 = 59
+                v2_h = int(v1_h1 - 1)
+                v2_m = int(v1_m1)
             else:
+                v2_h = v1_h1
                 v2_m = v1_m1
+
+            if enum == 3:
+                if v1_h1 == 0:
+                    if v1_m1 < 30:
+                        v2_m = 30
+                        v2_h = 0
+                    else:
+                        v2_h = v1_h1
+                        v2_m = v1_m1
         
-            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
-            ev3.set(time_add)
-                
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
+
+            if enum == 3:
+                ev3.set(time_add)
+            else:
+                ev5.set(time_add)
+            
         def AddTime1c(self):
             export1(self)
             AddTime1(self)
@@ -303,22 +373,22 @@ class MainWindow(tk.Frame):
         def SubTime15c(self):
             export1(self)
             SubTime15(self)
-            
-        def show_buttons():
-            button1.grid_forget() 
-            button2.grid(row=0, column=6)  
-            button3.grid(row=0, column=7)
-            button4.grid(row=1, column=7)  
-            button5.grid(row=2, column=7)
-            button6.grid(row=3, column=7)
-              
-        def hide_buttons():
-            button1.grid(row=0, column=6)  
-            button2.grid_forget()   
-            button3.grid_forget()
-            button4.grid_forget()  
-            button5.grid_forget()
-            button6.grid_forget()
+
+        def AddTime1cm(self):
+            export1(self)
+            AddTime1m(self)
+    
+        def AddTime15cm(self):
+            export1(self)
+            AddTime15m(self)
+    
+        def SubTime1cm(self):
+            export1(self)
+            SubTime1m(self)
+    
+        def SubTime15cm(self):
+            export1(self)
+            SubTime15m(self)
             
         def savetime():
             config = configparser.ConfigParser()
@@ -329,7 +399,7 @@ class MainWindow(tk.Frame):
             with open("config.ini", "w") as configfile:
                 config.write(configfile)
         
-        l1 = tk.Label(self, text="You have arrived at: ")
+        l1 = tk.Label(self, text="Arrived at: ")
         l1.grid(row=0, column=0)
         
         e1 = tk.Entry(self)
@@ -342,55 +412,69 @@ class MainWindow(tk.Frame):
         e1.grid(row=0, column=1, pady=4)
         e1.config(bg="white", state="readonly", textvariable = ev1)
         
-        button1 = tk.Button(self, text=">", fg="red", command=show_buttons)
-        button1.grid(row=0, column=6)
-        button1.lower()
-        
-        button2 = tk.Button(self, text="<", fg="red", command=hide_buttons)
-        button2.grid(row=0, column=6)
-
-        button3 = tk.Button(self, text="Setup", fg="red", command=lambda: controller.show_frame(SetupWindow))
+        image3 = ImageTk.PhotoImage(file = os.getcwd()+"/data/setup_r.png")
+        button3 = tk.Button(self, image=image3, fg="red", command=lambda: controller.show_frame(SetupWindow))
+        button3.image = image3
         button3.grid(row=0, column=7)
         
-        button4 = tk.Button(self, text="Save", fg="red", command=savetime)
+        image4 = ImageTk.PhotoImage(file = os.getcwd()+"/data/save_r.png")
+        button4 = tk.Button(self, fg="red", command=savetime, image=image4)
+        button4.image = image4
         button4.grid(row=1, column=7)
         
-        button5 = tk.Button(self, text="Login", fg="red", command=lambda: controller.show_frame(LoginWindow))
+        image5 = ImageTk.PhotoImage(file = os.getcwd()+"/data/login_r.png")
+        button5 = tk.Button(self, fg="red", image=image5, command=lambda: controller.show_frame(LoginWindow))
+        button5.image = image5
         button5.grid(row=2, column=7)
         
-        button6 = tk.Button(self, text="About", fg="red", command=popupabout)
+        image6 = ImageTk.PhotoImage(file = os.getcwd()+"/data/about_r.png")
+        button6 = tk.Button(self, fg="red", image=image6, command=popupabout)
+        button6.image = image6
         button6.grid(row=3, column=7)
-        
-    #Create a Label in textFrame
+
         l2 = tk.Label(self)
-        l2["text"] = "How long will you work?:"
-        l2.grid(row=1, column=0)
-    
-    # Create an Entry Widget in textFrame
+        l2["text"] = ",will work for:"
+        l2.grid(row=0, column=2)
+
         e2 = tk.Entry(self)
         e2["width"] = 5
         e2.bind("<Enter>", Set_Enum_2 )
         e2.bind("<Button-1>", AddTime15c )
         e2.bind("<Button-3>", SubTime15c )
-        e2.grid(row=1, column=1, pady=4)
+        e2.grid(row=0, column=3, pady=4)
         e2.config(bg="white", state="readonly", textvariable = ev2)
+
+        l5 = tk.Label(self)
+        l5["text"] = "Left work for:"
+        l5.grid(row=1, column=0)
+
+        e5 = tk.Entry(self)
+        e5["width"] = 5
+        e5.bind("<Enter>", Set_Enum_5 )
+        e5.bind("<Button-1>", AddTime1cm )
+        e5.bind("<Shift-1>", AddTime15cm )
+        e5.bind("<Button-3>", SubTime1cm )
+        e5.bind("<Shift-3>", SubTime15cm )
+        e5.grid(row=1, column=1, pady=4)
+        e5.config(bg="white", state="readonly", textvariable = ev5)
 
         l3 = tk.Label(self)
         l3["text"] = "And lunch? :"
-        l3.grid(row=1, column=4)
+        l3.grid(row=1, column=2)
 
         e3 = tk.Entry(self)
-        e3["width"] = 2
-        e3.bind("<Button-1>", AddTime1m )
-        e3.bind("<Shift-1>", AddTime15m )
-        e3.bind("<Button-3>", SubTime1m )
-        e3.bind("<Shift-3>", SubTime15m )
-        e3.grid(row=1, column=5)
+        e3["width"] = 5
+        e3.bind("<Enter>", Set_Enum_3 )
+        e3.bind("<Button-1>", AddTime1cm )
+        e3.bind("<Shift-1>", AddTime15cm )
+        e3.bind("<Button-3>", SubTime1cm )
+        e3.bind("<Shift-3>", SubTime15cm )
+        e3.grid(row=1, column=3)
         e3.config(bg="white", state="readonly", textvariable = ev3)
     
         l4= tk.Label(self)
         l4["text"] = "minutes"
-        l4.grid(row=1, column=6, padx=2)
+        l4.grid(row=1, column=4, padx=2)
         
         timeathome = tk.Label(self)
         timeathome.configure(text="Sample", bg="green", font=("Font",20))
@@ -424,8 +508,6 @@ class MainWindow(tk.Frame):
                 try:
                     t_in =str(e1.get())
                     t_in_h, t_in_m = t_in.split(':') 
-                    val1 = int(t_in_h)
-                    val2 = int(t_in_m)
                     break
                 except (ValueError):
                     t_in_h = "06"
@@ -437,8 +519,6 @@ class MainWindow(tk.Frame):
                 try:
                     t_work = str(e2.get())
                     t_work_h, t_work_m = t_work.split(':') 
-                    val3 = int(t_work_h)
-                    val4 = int(t_work_m)
                     break
                 except (ValueError):
                     t_work_h = "08"
@@ -449,17 +529,29 @@ class MainWindow(tk.Frame):
             while True:
                 try:
                     t_lunch = e3.get()
+                    t_lunch_h, t_lunch_m = t_lunch.split(':')
                     break
                 except (ValueError):
-                    t_lunch = "30"
+                    t_lunch_h = "00"
+                    t_lunch_m = "30"
                 break
-    
+            
+# work break
+            while True:
+                try:
+                    t_break = e5.get()
+                    t_break_h, t_break_m = t_break.split(':')
+                    break
+                except (ValueError):
+                    pass
+                break
 #variables preparation
             t_now = h1 + ":" + m1 + ":" + s1
             t_ar= t_in_h + ":" + t_in_m + ":00"
-            t_m = dt.timedelta(minutes=int(t_work_m)) + dt.timedelta(minutes=int(t_lunch))
-            t_w_h, t_w_m, t_w_s = str(t_m).split(':')
-            time_working = str(int(t_work_h) + int(t_w_h)) + ":" + str(t_w_m) + ":00"
+            t_m = dt.timedelta(minutes=int(t_work_m)) + dt.timedelta(minutes=int(t_lunch_m))
+            t_m1 = t_m + dt.timedelta(minutes=int(t_break_m))
+            t_w_h, t_w_m, t_w_s = str(t_m1).split(':')
+            time_working = str(int(t_work_h) + int(t_w_h) + int(t_lunch_h) + int(t_break_h)) + ":" + str(t_w_m) + ":00"
             fmt = '%H:%M:%S'
             tmin = dt.datetime(year=1999, month=1, day=1, hour=0, minute=0, second=0)
     
@@ -601,20 +693,29 @@ class LoginWindow(tk.Frame):
         
         e1_var = "6:00"
         e2_var = "8:00"
-        e3_var = "30"
+        e3_var = "0:30"
+        e5_var = "0:00"
         
         ev1 = tk.StringVar()
         ev2 = tk.StringVar()
         ev3 = tk.StringVar()
+        ev5 = tk.StringVar()
+        watt_start = "06:00" 
         
         ev1.set(e1_var)
         ev2.set(e2_var)
         ev3.set(e3_var)
+        ev5.set(e5_var)
         
-        rem_login = tk.IntVar()
+        rem_var = tk.IntVar()
         rem_temp = 0
-        login_OK = 1
+        login_OK = tk.IntVar()
+        login_OK.set(0)
+        login_temp = ""
         savedpath = tk.StringVar()
+
+        lunch_load = 0
+        t_out_time = "0:00:00"
         
         def Set_Enum_1(self):
             global enum
@@ -623,13 +724,25 @@ class LoginWindow(tk.Frame):
         def Set_Enum_2(self):
             global enum
             enum = 2
+
+        def Set_Enum_3(self):
+            global enum
+            enum = 3
+
+        def Set_Enum_5(self):
+            global enum
+            enum = 5
             
         def export1(self):
             global eexp
             if enum == 1:
                 eexp = str(ev1.get())
-            else:
+            elif enum == 2:
                 eexp = str(ev2.get())
+            elif enum == 3:
+                eexp = str(ev3.get())
+            else:
+                eexp = str(ev5.get())
                 
         def AddTime1(self):
             v1 = eexp
@@ -654,7 +767,6 @@ class LoginWindow(tk.Frame):
     
             if enum == 1:
                 ev1.set(time_add)
-    
             else:
                 ev2.set(time_add)
     
@@ -681,7 +793,6 @@ class LoginWindow(tk.Frame):
         
             if enum == 1:
                 ev1.set(time_add)
-    
             else:
                 ev2.set(time_add)
     
@@ -709,7 +820,6 @@ class LoginWindow(tk.Frame):
         
             if enum == 1:
                 ev1.set(time_add)
-    
             else:
                 ev2.set(time_add)
     
@@ -737,57 +847,116 @@ class LoginWindow(tk.Frame):
         
             if enum == 1:
                 ev1.set(time_add)
-    
             else:
                 ev2.set(time_add)
     
         def AddTime1m(self):
-            v1 = str(e3.get())
-            v1_m1 = int(v1) + 1
-    
-            if v1_m1 < 59:
-                v2_m = v1_m1
+            v1 = eexp
+            v1_h, v1_m = v1.split(':') 
+            v1_h1 = int(v1_h)
+            v1_m1 = int(v1_m) + 1
+
+            if v1_m1 > 59:
+                v2_h = int(v1_h1 + (v1_m1 // 60))
+                v2_m = int(v1_m1 - 60)
             else:
-                v2_m = 59
-  
-            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
-            ev3.set(time_add)
-    
+                v2_h = v1_h1
+                v2_m = v1_m1
+                
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
+
+            if enum == 3:
+                ev3.set(time_add)
+            elif enum == 5:
+                ev5.set(time_add)
+            else:
+                pass
+                
         def AddTime15m(self):
-            v1 =str(e3.get())
-            v1_m1 = int(v1) + 15
+            v1 = eexp
+            v1_h, v1_m = v1.split(':') 
+            v1_h1 = int(v1_h)
+            v1_m1 = int(v1_m) + 15
     
-            if v1_m1 < 59:
-                v2_m = v1_m1
+            if v1_m1 > 59:
+                v2_h = int(v1_h1 + (v1_m1 // 60))
+                v2_m = int(v1_m1 - 60)
             else:
-                v2_m = 59
+                v2_h = v1_h1
+                v2_m = v1_m1
         
-            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
-            ev3.set(time_add)
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
+
+            if enum == 3:
+                ev3.set(time_add)
+            elif enum == 5:
+                ev5.set(time_add)
+            else:
+                pass
     
         def SubTime1m(self):
-            v1 =str(e3.get())
-            v1_m1 = int(v1) - 1
+            v1 = eexp
+            v1_h, v1_m = v1.split(':') 
+            v1_h1 = int(v1_h)
+            v1_m1 = int(v1_m) - 1
     
-            if v1_m1 < 30:
-                v2_m = 30
+            if v1_m1 < 0:
+                v1_m1 = 59
+                v2_h = int(v1_h1 - 1)
+                v2_m = int(v1_m1)
             else:
+                v2_h = v1_h1
                 v2_m = v1_m1
+
+            if enum == 3:
+                if v1_h1 == 0:
+                    if v1_m1 < 30:
+                        v2_m = 30
+                        v2_h = 0
+                    else:
+                        v2_h = v1_h1
+                        v2_m = v1_m1
         
-            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
-            ev3.set(time_add)
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
+
+            if enum == 3:
+                ev3.set(time_add)
+            elif enum == 5:
+                ev5.set(time_add)
+            else:
+                pass
     
         def SubTime15m(self):
-            v1 =str(e3.get())
-            v1_m1 = int(v1) - 15
+            v1 = eexp
+            v1_h, v1_m = v1.split(':') 
+            v1_h1 = int(v1_h)
+            v1_m1 = int(v1_m) - 15
     
-            if v1_m1 < 30:
-                v2_m = 30
+            if v1_m1 < 0:
+                v1_m1 = 59
+                v2_h = int(v1_h1 - 1)
+                v2_m = int(v1_m1)
             else:
+                v2_h = v1_h1
                 v2_m = v1_m1
+
+            if enum == 3:
+                if v1_h1 == 0:
+                    if v1_m1 < 30:
+                        v2_m = 30
+                        v2_h = 0
+                    else:
+                        v2_h = v1_h1
+                        v2_m = v1_m1
         
-            time_add = str((str(dt.timedelta(minutes=v2_m)))[2:-3])
-            ev3.set(time_add)
+            time_add = str((str(dt.timedelta(hours=v2_h, minutes=v2_m)))[:-3])
+
+            if enum == 3:
+                ev3.set(time_add)
+            elif enum == 5:
+                ev5.set(time_add)
+            else:
+                pass
                 
         def AddTime1c(self):
             export1(self)
@@ -804,22 +973,22 @@ class LoginWindow(tk.Frame):
         def SubTime15c(self):
             export1(self)
             SubTime15(self)
-            
-        def show_buttons():
-            button1.grid_forget() 
-            button2.grid(row=0, column=6)  
-            button3.grid(row=0, column=7)
-            button4.grid(row=1, column=7)  
-            button5.grid(row=2, column=7)
-            button6.grid(row=3, column=7)
-              
-        def hide_buttons():
-            button1.grid(row=0, column=6)  
-            button2.grid_forget()   
-            button3.grid_forget()
-            button4.grid_forget()  
-            button5.grid_forget()
-            button6.grid_forget()
+
+        def AddTime1cm(self):
+            export1(self)
+            AddTime1m(self)
+    
+        def AddTime15cm(self):
+            export1(self)
+            AddTime15m(self)
+    
+        def SubTime1cm(self):
+            export1(self)
+            SubTime1m(self)
+    
+        def SubTime15cm(self):
+            export1(self)
+            SubTime15m(self)
             
         def savetime():
             config = configparser.ConfigParser()
@@ -829,100 +998,306 @@ class LoginWindow(tk.Frame):
             config.set("preset", "lunch_break", e3.get())
             with open("config.ini", "w") as configfile:
                 config.write(configfile)
-                
+
+        def loginattempt():
+            username = loginentry.get()
+            password = passentry.get()
+            phantom_driver = os.getcwd()+"/data/phantomjs.exe"
+            browser = webdriver.PhantomJS(phantom_driver, service_args=['--ignore-ssl-errors=true'])
+            url = "http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp"
+            try:
+                browser.get(url)
+                browser.find_element_by_id("uname").clear()
+                browser.find_element_by_id("uname").send_keys(username)
+                browser.find_element_by_id("pass").clear()
+                browser.find_element_by_id("pass").send_keys(password)
+                browser.find_element_by_css_selector('input[type=\"submit\"]').click()
+                if browser.current_url == url:
+                    messagebox.showerror("Error","Wrong Password")
+                    return
+                else:
+                    pass
+                browser.switch_to.frame(browser.find_element_by_name("toolbar"))
+                browser.find_element_by_css_selector("select#repId > option[value='1']").click()
+                browser.switch_to.default_content()
+                browser.switch_to.frame(browser.find_element_by_name("report"))
+                content = browser.page_source
+                browser.quit()
+            except NoSuchElementException:
+                messagebox.showerror("Error","WATT not accessible")
+            soup=BeautifulSoup(content, "lxml")
+            #get correct class
+            now = dt.date.today()
+            day = int(now.strftime("%d"))
+            day_string = str(day)+"."
+            #get times from table
+            variables = {}
+
+            try:
+                for row in range (0,100):
+                    for td in soup.find("td", text=day_string).parent.findAll('td')[row]:
+                        x = str(td)
+                        x1 = x.strip()
+                        variables [row] = x1
+            except IndexError:
+                pass
+
+            #Lunch check
+            try:        
+                for y in range (0,100):
+                    if variables[y] == "Od Ob":
+                        ob1 = dt.datetime.strptime(variables[int(y+1)],"%H:%M")
+                        ob2 = dt.datetime.strptime(variables[int(y-2)],"%H:%M")
+                        lunch_var = ob1 - ob2
+                        lunch_load = 1
+                    elif variables[y] == "Př Ob":
+                        ob1 = dt.datetime.strptime(variables[int(y-2)],"%H:%M")
+                        ob2 = dt.datetime.strptime(variables[int(y-5)],"%H:%M")
+                        lunch_var = ob1 - ob2
+                        lunch_load = 1
+                    else:
+                        lunch_var = "0:30:00"
+                    
+                    l_h, l_m, l_s  = str(lunch_var).split(':') 
+                    ev3.set(str(l_h+":"+l_m))
+                    
+            except KeyError:
+                pass
+            #Arrival set and check for medical
+            if variables[4] == "Př Lé":
+                ev1.set("8:00")
+            else:
+                ev1.set(variables[2])
+
+            #Work-breaks check
+            variables_leave = {}
+            variables_enter = {}
+            x = 0
+            try:
+                for z in range (0,100):
+                    if variables[z] == "Od":
+                        if variables[z+3] == "Př":
+                            z1 = variables[z-2]
+                            z2 = variables[z+1]
+                            variables_leave[x]=z1
+                            variables_enter[x]=z2
+                            x=x+1
+                        else:
+                            pass
+                    else:
+                        pass
+            except KeyError:
+                pass
+            #Time spent off-work
+            t_out_h = 0
+            t_out_m = 0
+
+            try:
+                for t in range (0,100):
+                    t_out = str(dt.datetime.strptime(variables_enter[t],"%H:%M")-dt.datetime.strptime(variables_leave[t],"%H:%M"))
+                    t_temp_h, t_temp_m, t_temp_s = t_out.split()
+                    t_out_h = t_out_h + int(t_temp_h)
+                    t_out_m = t_out_m + int(t_temp_m)
+            except KeyError:
+                pass
+            
+            time_out_h = str(t_out_h)
+            time_out_m = str(t_out_m)
+            t_out_fin = dt.datetime.strptime(time_out_h,"%H") + dt.timedelta(minutes=int(time_out_m))
+            t_out_time = str(t_out_fin.time())[:-3]
+            ev5.set(t_out_time)
+            
+            config = configparser.ConfigParser()
+            config.read("config.ini")
+            if rem_var.get() == 1:
+                config.set("login", "username", loginentry.get())
+            else:
+                config.set("login", "username", "")
+            with open("config.ini", "w") as configfile:
+                config.write(configfile)
+  
+            login_OK.set(1)
+            
         def loginaction():
             l1.grid(row=0, column=0)
             e1.grid(row=0, column=1, pady=4)
-            l2.grid(row=1, column=0)
-            e2.grid(row=1, column=1, pady=4)
-            l3.grid(row=1, column=4)
-            e3.grid(row=1, column=5)
-            l4.grid(row=1, column=6, padx=2)
+            l2.grid(row=0, column=2)
+            e2.grid(row=0, column=3, pady=4)
+            l3.grid(row=1, column=2)
+            if lunch_load == 1:
+                e4.grid(row=1, column=3)
+            else:
+                e3.grid(row=1, column=3)
+            l4.grid(row=1, column=4, padx=2)
+            l5.grid(row=1, column=0)
+            e5.grid(row=1, column=1, pady=4)
+            button3.grid(row=0, column=7)
+            button4.grid(row=1, column=7)
+            button5.grid(row=2, column=7)
+            button6.grid(row=3, column=7)
+            button_test.grid(row=0, column=6)
             timeathome.grid(row=2, columnspan=7, sticky="nsew")
             timeleft.grid(row=3, columnspan=7, sticky="nsew")
             loginlabel.grid_forget()
             loginentry.grid_forget()
             passlabel.grid_forget()
             passentry.grid_forget()
-            
-        def loginattempt():
-            username = 1610616 #loginentry.get()
-            password = 1610616 #passentry.get()
-            phantom_driver = "/NonEncryptedData/python/data/phantomjs.exe"
-            browser = webdriver.PhantomJS(phantom_driver, service_args=['--ignore-ssl-errors=true'])
-            url = "http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp"
-            browser.get(url)
-            browser.find_element_by_id("uname").clear()
-            browser.find_element_by_id("uname").send_keys(username)
-            browser.find_element_by_id("pass").clear()
-            browser.find_element_by_id("pass").send_keys(password)
-            browser.find_element_by_css_selector('input[type=\"submit\"]').click()
-            url1 = browser.current_url
-            browser.switch_to.frame(browser.find_element_by_name("report"))
-            content = browser.page_source
-            browser.quit()
-            soup=BeautifulSoup(content, "lxml")
-            table = soup.find('table', {'class': 'data'})
-            pretty = table.prettify()
-            # Debug only!
-            file = open("output.html", "w")
-            file.write(pretty)
-            file.close()
-            # End Debug only!
-            print(pretty)
-            
-            if rem_temp == 1:
-                config = configparser.ConfigParser()
-                config.read("config.ini")
-                config.set("login", "username", loginentry.get())
-                with open("config.ini", "w") as configfile:
-                    config.write(configfile)
-            else:
-                pass
-        
+            loginbutton.grid_forget()
+            remember.grid_forget()
+            back_button.grid_forget()
             
         def loginaction_final():
             loginattempt()
-            if login_OK == 0:
+            login_OK_temp = login_OK.get()
+            if login_OK_temp == 1:
                 loginaction()
             else:
                 pass
+
+        def monthly_overview():
+            username = loginentry.get()
+            password = passentry.get()
+            phantom_driver = os.getcwd()+"/data/phantomjs.exe"
+            browser = webdriver.PhantomJS(phantom_driver, service_args=['--ignore-ssl-errors=true'])
+            url = "http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp"
+            try:
+                browser.get(url)
+                browser.find_element_by_id("uname").clear()
+                browser.find_element_by_id("uname").send_keys(username)
+                browser.find_element_by_id("pass").clear()
+                browser.find_element_by_id("pass").send_keys(password)
+                browser.find_element_by_css_selector('input[type=\"submit\"]').click()
+                if browser.current_url == url:
+                    messagebox.showerror("Error","Wrong Password")
+                    return
+                else:
+                    pass
+                browser.switch_to.frame(browser.find_element_by_name("toolbar"))
+                browser.find_element_by_css_selector("select#repId > option[value='19']").click()
+                browser.switch_to.default_content()
+                browser.switch_to.frame(browser.find_element_by_name("report"))
+                content = browser.page_source
+                browser.quit()
+            except NoSuchElementException:
+                messagebox.showerror("Error","WATT not accessible")
+            soup=BeautifulSoup(content, "lxml")
+            #get correct class
+            now = dt.date.today()
+            day = int(now.strftime("%d"))
+            day_string = str(day)+"."
+            #get times from table
+            variables_today = {}
+            try:
+                for row in range (0,100):
+                    for td in soup.find("td", text=day_string).parent.findAll('td')[row]:
+                        x = str(td)
+                        x1 = x.strip()
+                        variables_today [row] = x1
+            except IndexError:
+                pass
+
+            try:
+                work_today = variables_today [10]
+            except KeyError:
+                work_today = "0:00"
+
+            w1h, w1m = work_today.split(':')
+        
+            variables_sums = {}
+
+            try:
+                for row in range (0,100):
+                    for td in soup.find("tr", {"class":"sums"}).findAll('td')[row]:
+                        x = str(td)
+                        x1 = x.strip()
+                        variables_sums [row] = x1
+            except IndexError:
+                pass
+
+            w2h, w2m = variables_sums[3].split(':')
+            w3h, w3m = variables_sums[11].split(':')
+            w4h, w4m = variables_sums[17].split(':')
             
-        def rem():
-            pass
-            
-        l1 = tk.Label(self, text="You have arrived at: ")
+            days_watt = variables_sums[2][:-3]
+            hours_normal = 8 * (int(days_watt) - 1)
+            #Datetime will not accept times over 24h....now add rest....
+            hours_watt = int(w2h)-int(w1h)+int(w3h)+int(w4h)
+            minutes_watt = int(w2m)-int(w1m)+int(w3m)+int(w4m)
+            hours_dis = hours_watt - hours_normal
+            time_string = "0:00"
+            print(hours_dis)
+
+            if hours_dis == minutes_watt == 0:
+                time_string = "0:00"
+            elif minutes_watt < 0:
+                print("1")
+                hours_f = hours_dis - 1
+                minutes_f = 60 - minutes_watt
+                time_prep = str(hours_f)+":"+str(minutes_f)
+                time_f = dt.datetime.strptime(time_prep, "%H:%M")
+                time_print = time_f.time()
+                if hours_dis < 0 :
+                    time_string = "minus "+str(time_print)
+                else:
+                    time_string = "plus "+str(time_print)
+            elif minutes_watt >= 0 and hours_dis >= 0 :
+                print("2")
+                hours_f = hours_dis
+                minutes_f = minutes_watt
+                time_prep = str(hours_f)+":"+str(minutes_f)
+                time_f = dt.datetime.strptime(time_prep, "%H:%M")
+                time_print = time_f.time()
+                time_string = "plus "+str(time_print)
+            elif minutes_watt > 0 and hours_dis < 0 :
+                print("3")
+                hours_f = hours_dis + 1
+                minutes_f = 60 - minutes_watt
+                time_prep = str(hours_f)+":"+str(minutes_f)
+                time_f = dt.datetime.strptime(time_prep, "%H:%M")
+                time_print = "-"+time_f.time()
+                time_string = "minus "+str(time_print)
+            elif minutes_watt >= 0 and hours_dis < 0 :
+                print("4")
+                hours_f = abs(hours_dis)
+                minutes_f = minutes_watt
+                time_prep = str(hours_f)+":"+str(minutes_f)
+                time_f = dt.datetime.strptime(time_prep, "%H:%M")
+                time_print = str(time_f.time())
+                time_string = "minus "+time_print
+            else:
+                print("Do a better job...")
+                
+            balance = "Your time balance is "+time_string
+            messagebox.showinfo("Month overview", balance)
+
+
+        l1 = tk.Label(self, text="Arrived at: ")
         
         e1 = tk.Entry(self)
         e1["width"] = 5
-        e1.bind("<Enter>", Set_Enum_1 )
-        e1.bind("<Button-1>", AddTime1c )
-        e1.bind("<Shift-1>", AddTime15c )
-        e1.bind("<Button-3>", SubTime1c )
-        e1.bind("<Shift-3>", SubTime15c )
         e1.config(bg="white", state="readonly", textvariable = ev1)
-        
-        button1 = tk.Button(self, text=">", fg="red", command=show_buttons)
-        button1.grid(row=0, column=6)
-        button1.lower()
-        
-        button2 = tk.Button(self, text="<", fg="red", command=hide_buttons)
-        button2.grid(row=0, column=6)
 
-        button3 = tk.Button(self, text="Main", fg="red", command=lambda: controller.show_frame(MainWindow))
-        button3.grid(row=0, column=7)
+        image3 = ImageTk.PhotoImage(file = os.getcwd()+"/data/undo_r.png")
+        button3 = tk.Button(self, image=image3, fg="red", command=lambda: controller.show_frame(MainWindow))
+        button3.image = image3
         
-        button4 = tk.Button(self, text="Setup", fg="red", command=lambda: controller.show_frame(SetupWindow))
-        button4.grid(row=1, column=7)
+        image4 = ImageTk.PhotoImage(file = os.getcwd()+"/data/setup_r.png")
+        button4 = tk.Button(self, image=image4, fg="red", command=lambda: controller.show_frame(SetupWindow))
+        button4.image = image4
         
-        button5 = tk.Button(self, text="Login", fg="red", command=popupmsg)
-        button5.grid(row=2, column=7)
+        image5 = ImageTk.PhotoImage(file = os.getcwd()+"/data/login_r.png")
+        button5 = tk.Button(self, image=image5, fg="red", command=loginaction_final)
+        button5.image = image5
         
-        button6 = tk.Button(self, text="About", fg="red", command=popupabout)
-        button6.grid(row=3, column=7)
+        image6 = ImageTk.PhotoImage(file = os.getcwd()+"/data/about_r.png")
+        button6 = tk.Button(self, image=image6, fg="red", command=popupabout)
+        button6.image = image6
+
+        button_test = tk.Button(self, text="Test", fg="red", command=monthly_overview)
+        button_test.image = image6
         
         l2 = tk.Label(self)
-        l2["text"] = "How long will you work?:"
+        l2["text"] = ",will work for:"
     
         e2 = tk.Entry(self)
         e2["width"] = 5
@@ -935,15 +1310,26 @@ class LoginWindow(tk.Frame):
         l3["text"] = "And lunch? :"
 
         e3 = tk.Entry(self)
-        e3["width"] = 2
-        e3.bind("<Button-1>", AddTime1m )
-        e3.bind("<Shift-1>", AddTime15m )
-        e3.bind("<Button-3>", SubTime1m )
-        e3.bind("<Shift-3>", SubTime15m )
+        e3["width"] = 5
+        e3.bind("<Button-1>", AddTime1cm )
+        e3.bind("<Shift-1>", AddTime15cm )
+        e3.bind("<Button-3>", SubTime1cm )
+        e3.bind("<Shift-3>", SubTime15cm )
         e3.config(bg="white", state="readonly", textvariable = ev3)
+        
+        e4 = tk.Entry(self)
+        e4["width"] = 4
+        e4.config(bg="white", state="readonly", textvariable = ev3)
     
         l4= tk.Label(self)
         l4["text"] = "minutes"
+
+        l5 = tk.Label(self)
+        l5["text"] = "Left work for:"
+
+        e5 = tk.Entry(self)
+        e5["width"] = 5
+        e5.config(bg="white", state="readonly", textvariable = ev5)
         
         timeathome = tk.Label(self)
         timeathome.configure(text="Sample", bg="green", font=("Font",20))
@@ -956,27 +1342,32 @@ class LoginWindow(tk.Frame):
         
         loginentry = tk.Entry(self)
         loginentry["width"] = 10
-        loginentry.grid(row=0, column=2)
+        loginentry.grid(row=0, column=2, pady=4)
+        loginentry.focus_set()
         
-        remember = tk.Checkbutton(self, text="Remember me", variable=rem)
+        remember = tk.Checkbutton(self, text="Remember me", variable=rem_var)
         remember.grid(row=0, column=3)
         
         passlabel = tk.Label(self, text="Heslo")
         passlabel.grid(row=1, column=1)
         
-        passentry = tk.Entry(self)
+        passentry = tk.Entry(self, show="*" )
         passentry["width"] = 15
         passentry.grid(row=1, column=2)
+        passentry.bind("<Return>", lambda event: loginaction_final())
         
         loginbutton = tk.Button(self, text = "Login", command=loginaction_final)
-        loginbutton.grid(row=2, columnspan=2)
+        loginbutton.grid(row=2, column=0, columnspan=2)
+        loginbutton.bind("<Return>", lambda event: loginaction_final())
+        
+        back_button = tk.Button(self, text = "Back", command=lambda: controller.show_frame(MainWindow))
+        back_button.grid(row=2, column=2, columnspan=2)
+        back_button.bind("<Return>", lambda event: controller.show_frame(MainWindow))
         
         config = configparser.ConfigParser()
         config.read("config.ini")
-        ev1_time = (config["preset"]["arrival_time"])
         ev2_time = (config["preset"]["work_time"])
         ev3_time = (config["preset"]["lunch_break"])
-        ev1.set(ev1_time)
         ev2.set(ev2_time)
         ev3.set(ev3_time)
         color1_temp = str((config["visual"]["color1"]))
@@ -985,6 +1376,13 @@ class LoginWindow(tk.Frame):
         timeleft.configure(bg=color2_temp)
         savedpath_temp = (config["login"]["url"])
         savedpath.set(savedpath_temp)
+        rem_temp = (config ["login"]["remember"])
+        rem_var.set(rem_temp)
+        if rem_var.get() == 1:
+            login_temp = (config ["login"]["username"])
+            loginentry.insert(0, login_temp)
+        else:
+            pass
         
         def tick1():
             now = dt.datetime.now()
@@ -997,8 +1395,11 @@ class LoginWindow(tk.Frame):
                 try:
                     t_in =str(e1.get())
                     t_in_h, t_in_m = t_in.split(':') 
-                    val1 = int(t_in_h)
-                    val2 = int(t_in_m)
+                    if int(t_in_h) < 6:
+                        t_in_h = "06"
+                        t_in_m = "00"
+                    else:
+                        pass
                     break
                 except (ValueError):
                     t_in_h = "06"
@@ -1010,8 +1411,6 @@ class LoginWindow(tk.Frame):
                 try:
                     t_work = str(e2.get())
                     t_work_h, t_work_m = t_work.split(':') 
-                    val3 = int(t_work_h)
-                    val4 = int(t_work_m)
                     break
                 except (ValueError):
                     t_work_h = "08"
@@ -1021,18 +1420,35 @@ class LoginWindow(tk.Frame):
 # lunch break
             while True:
                 try:
-                    t_lunch = e3.get()
+                    if lunch_load == 1:
+                        t_lunch = e4.get()
+                    else:
+                        t_lunch = e3.get()
+                    t_lunch_h, t_lunch_m = t_lunch.split(':')
+
+                    if int(t_lunch_h) == 0:
+                        if int(t_lunch_m) < 30:
+                            t_lunch_m = str(30)
+                        else:
+                            pass
+                    else:
+                        pass
                     break
                 except (ValueError):
-                    t_lunch = "30"
+                    t_lunch_m = "30"
+                    t_lunch_h = "0"
                 break
-    
+
+# non-paid pause
+            t_out_time_h, t_out_time_m, t_out_time_s = t_out_time.split(":")
+
 #variables preparation
             t_now = h1 + ":" + m1 + ":" + s1
             t_ar= t_in_h + ":" + t_in_m + ":00"
-            t_m = dt.timedelta(minutes=int(t_work_m)) + dt.timedelta(minutes=int(t_lunch))
-            t_w_h, t_w_m, t_w_s = str(t_m).split(':')
-            time_working = str(int(t_work_h) + int(t_w_h)) + ":" + str(t_w_m) + ":00"
+            t_m = dt.timedelta(minutes=int(t_work_m)) + dt.timedelta(minutes=int(t_lunch_m))
+            t_m1 = t_m + dt.timedelta(minutes=int(t_out_time_m))
+            t_w_h, t_w_m, t_w_s = str(t_m1).split(':')
+            time_working = str(int(t_work_h) + int(t_w_h) + int(t_lunch_h) + int(t_out_time_h)) + ":" + str(t_w_m) + ":00"
             fmt = '%H:%M:%S'
             tmin = dt.datetime(year=1999, month=1, day=1, hour=0, minute=0, second=0)
     
