@@ -7,7 +7,7 @@ import datetime as dt
 from datetime import timedelta
 import os.path, os
 import configparser
-from tkinter import colorchooser, messagebox
+from tkinter import colorchooser, messagebox, filedialog
 from bs4 import BeautifulSoup
 import lxml
 from selenium import webdriver
@@ -16,21 +16,39 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from PIL import ImageTk, Image
+import subprocess
+import shutil
+import zipfile
 
 #Global variables
     #Entry widget number
 enum = 0
     #Entry widget value export
 eexp = 0
+    #Path to data directory
+global base_path
+base_path = ""
+
+funame = "updater.exe"
+root_dir1 = os.path.split(os.path.abspath(os.path.dirname(__file__)))[0]+"/data/"
+root_dir2 = os.getcwd()+"/data/"
+ulocation1 = os.path.exists(root_dir1+"/"+funame)
+ulocation2 = os.path.exists(root_dir2+funame)
+        
+if ulocation1 == True:
+    base_path = root_dir1
+elif ulocation2 == True:
+    base_path = root_dir2
+else:
+    messagebox.showerror("Error","update.exe not present in data folder, reinstall program")    
 
 ABOUT_TEXT ="""
-            Go Home! v2.0Beta2 
-          created by Adam Slivka
+                Go Home! v2.0 
+            created by Adam Slivka
           
-    For licence see LICENCE.TXT 
-    For detailed info about program, 
-    controls and all its parts see README.TXT 
-    and GoHome!_User_manual.pdf"""
+    For information about licence, philosophy,
+and all parts of program see GoHome!_User_manual.pdf.
+     """
 
 def popupmsg():
     popup = tk.Tk()
@@ -60,8 +78,7 @@ class TimeWindow(tk.Tk):
  
         cvar1 = 0
         
-        fname = "config.ini"
-        checkconfig = os.path.isfile(fname)
+        checkconfig = os.path.exists(base_path+"config.ini")
         
         if checkconfig == True:
             pass
@@ -71,12 +88,17 @@ class TimeWindow(tk.Tk):
             config['setup'] = {"stay_on_top":"0"}
             config['visual'] = {"color1":"green","color2":"yellow" }
             config['login'] = {"username":"", "url":"http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp", "remember":"1"}
-            with open('config.ini', 'w') as configfile:
+            config['system'] = {"version":"2.0", "version_updater":"1", "autocheck":"0", "update_dir":"S:/adam.slivka/All/GoHome!/update"}
+            with open(base_path+'config.ini', 'w') as configfile:
                 config.write(configfile)
         
         config = configparser.ConfigParser()
-        config.read("config.ini")
+        config.read(base_path+"config.ini")
         cvar1 = int(config["setup"]["stay_on_top"])
+        cvar2 = int(config["system"]["autocheck"])
+        ver_actual = config["system"]["version"]
+        ver_upd = config["system"]["version_updater"]
+        path_upd = config["system"]["update_dir"]
         
         if cvar1 == 1:
             tk.Tk.wm_attributes(self, "-topmost", 1)
@@ -99,6 +121,70 @@ class TimeWindow(tk.Tk):
             frame.grid(row=0, column=0, sticky="nsew")
         
         self.show_frame(MainWindow)
+
+        def versioncheck():
+        #Version checking
+            update_proc = 1
+            config = configparser.ConfigParser()
+            config.read(base_path+"config.ini")
+            path_upd = config["system"]["update_dir"]
+            path = path_upd+"/updater.zip"
+            try:
+                with open(path_upd+"/update.txt","r") as ver_p:
+                    version = ver_p.read()
+            except FileNotFoundError:
+                path_upd = "S:/adam.slivka/All/GoHome!/update"
+                with open(path_upd+"/update.txt","r") as ver_p:
+                    version = ver_p.read()
+            try:
+                with open(path_upd+"/updater.txt","r") as ver:
+                    version_updater = ver.read()
+            except FileNotFoundError:
+                messagebox.showerror("Error","Update folder not found, set correct path in config.ini")
+                
+            d_1,d_2 = version.split('.')
+            a_1,a_2 = ver_actual.split('.')
+            if int(version_updater) > int(ver_upd):
+                result = messagebox.askquestion("New version","New version available, update?")
+                if result == "yes":
+                    os.mkdir("tmp")
+                    root_dir = os.path.split(os.path.abspath(os.path.dirname(__file__)))[0]
+                    shutil.copy2(path_upd+"/updater.zip", os.getcwd()+"/tmp")
+                    file = os.getcwd()+"/tmp/updater.zip"
+                    zip_ref = zipfile.ZipFile(file,"r")
+                    zip_ref.extractall(os.getcwd()+"/tmp")
+                    zip_ref.close()
+                    shutil.copyfile("tmp/updater.exe",base_path+"updater.exe")
+                    shutil.rmtree("tmp")
+                    config = configparser.ConfigParser()
+                    config.read(base_path+"config.ini")
+                    config.set("system", "version_updater", version_updater)
+                    with open(base_path+"config.ini", "w") as configfile:
+                        config.write(configfile)
+                    if int(d_2) > int(a_2):
+                        subprocess.Popen(base_path+"updater.exe")
+                        os._exit(-1)
+                    else:
+                        pass
+                else:
+                    update_proc = 0      
+            else:
+                pass    
+            if int(d_1) >= int(a_1) and int(d_2) > int(a_2) and update_proc == 1:
+                result = messagebox.askquestion("New version","New version available, update?")
+                if result == "yes":
+                    subprocess.Popen(base_path+"updater.exe")
+                    os._exit(-1)
+                else:
+                    pass       
+            else:
+                pass
+
+        if cvar2 == 1:
+            versioncheck()
+        else:
+            pass
+
         
     def show_frame(self, cont):
         
@@ -124,7 +210,7 @@ class MainWindow(tk.Frame):
         ev2.set(e2_var)
         ev3.set(e3_var)
         ev5.set(e5_var)
-        
+
         def Set_Enum_1(self):
             global enum
             enum = 1
@@ -392,11 +478,11 @@ class MainWindow(tk.Frame):
             
         def savetime():
             config = configparser.ConfigParser()
-            config.read("config.ini")
+            config.read(base_path+"config.ini")
             config.set("preset", "arrival_time", e1.get())
             config.set("preset", "work_time", e2.get())
             config.set("preset", "lunch_break", e3.get())
-            with open("config.ini", "w") as configfile:
+            with open(base_path+"config.ini", "w") as configfile:
                 config.write(configfile)
         
         l1 = tk.Label(self, text="Arrived at: ")
@@ -412,22 +498,22 @@ class MainWindow(tk.Frame):
         e1.grid(row=0, column=1, pady=4)
         e1.config(bg="white", state="readonly", textvariable = ev1)
         
-        image3 = ImageTk.PhotoImage(file = os.getcwd()+"/data/setup_r.png")
+        image3 = ImageTk.PhotoImage(file = base_path+"setup_r.png")
         button3 = tk.Button(self, image=image3, fg="red", command=lambda: controller.show_frame(SetupWindow))
         button3.image = image3
         button3.grid(row=0, column=7)
         
-        image4 = ImageTk.PhotoImage(file = os.getcwd()+"/data/save_r.png")
+        image4 = ImageTk.PhotoImage(file = base_path+"save_r.png")
         button4 = tk.Button(self, fg="red", command=savetime, image=image4)
         button4.image = image4
         button4.grid(row=1, column=7)
         
-        image5 = ImageTk.PhotoImage(file = os.getcwd()+"/data/login_r.png")
+        image5 = ImageTk.PhotoImage(file = base_path+"login_r.png")
         button5 = tk.Button(self, fg="red", image=image5, command=lambda: controller.show_frame(LoginWindow))
         button5.image = image5
         button5.grid(row=2, column=7)
         
-        image6 = ImageTk.PhotoImage(file = os.getcwd()+"/data/about_r.png")
+        image6 = ImageTk.PhotoImage(file = base_path+"about_r.png")
         button6 = tk.Button(self, fg="red", image=image6, command=popupabout)
         button6.image = image6
         button6.grid(row=3, column=7)
@@ -485,7 +571,7 @@ class MainWindow(tk.Frame):
         timeleft.grid(row=3, columnspan=7, sticky="nsew")
         
         config = configparser.ConfigParser()
-        config.read("config.ini")
+        config.read(base_path+"config.ini")
         ev1_time = (config["preset"]["arrival_time"])
         ev2_time = (config["preset"]["work_time"])
         ev3_time = (config["preset"]["Lunch_break"])
@@ -496,7 +582,7 @@ class MainWindow(tk.Frame):
         color2_temp = str((config["visual"]["color2"]))
         timeathome.configure(bg=color1_temp)
         timeleft.configure(bg=color2_temp)
-        
+
         def tick1():
             now = dt.datetime.now()
             h1 = str(now.hour)
@@ -589,23 +675,35 @@ class MainWindow(tk.Frame):
                 tk.Tk.wm_state(controller, "icon")
 
         tick1()
-                
+        
 class SetupWindow(tk.Frame):
     
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
         cvar1 = tk.IntVar()
+        cvar2 = tk.IntVar()
         color1 = tk.StringVar()
         color2 = tk.StringVar()
+        dir_update = "S:/adam.slivka/All/GoHome!/update"
+
+        def set_path():
+            dir_update = tk.filedialog.askdirectory()
+            config = configparser.ConfigParser()
+            config.read(base_path+"config.ini")
+            config.set("system", "update_dir", str(dir_update))
+            with open(base_path+"config.ini", "w") as configfile:
+                config.write(configfile)
+            print(dir_update)
                 
         def save():
             config = configparser.ConfigParser()
-            config.read("config.ini")
+            config.read(base_path+"config.ini")
             config.set("setup", "stay_on_top", str(cvar1.get()))
+            config.set("system", "autocheck", str(cvar2.get()))
             config.set("visual", "color1", str(color1.get()))
             config.set("visual", "color2", str(color2.get()))
-            with open("config.ini", "w") as configfile:
+            with open(base_path+"config.ini", "w") as configfile:
                 config.write(configfile)
                 
         def reset():
@@ -618,6 +716,8 @@ class SetupWindow(tk.Frame):
         
         def showsystem():
             cbutton1.grid(row=2, columnspan=4, sticky="w")
+            cbutton2.grid_forget()
+            buttonpath.grid_forget()
             buttons.grid(row=4, column=1, sticky="w")
             buttonsr.grid(row=4, column=2, sticky="w")
             button.grid(row=4, column=0, sticky="w")
@@ -627,10 +727,26 @@ class SetupWindow(tk.Frame):
             buttonc2.grid_forget()
             labelc1.grid_forget()
             labelc2.grid_forget()
+
+        def showupdates():
+            cbutton1.grid_forget()
+            cbutton2.grid(row=2, columnspan=4, sticky="w")
+            buttonpath.grid(row=3, columnspan=4, sticky="w")
+            buttons.grid(row=5, column=1, sticky="w")
+            buttonsr.grid(row=5, column=2, sticky="w")
+            button.grid(row=5, column=0, sticky="w")
+            label.configure(text="Note that configuration will take effect after restart")
+            label.grid(row=4, columnspan=7)
+            buttonc1.grid_forget()
+            buttonc2.grid_forget()
+            labelc1.grid_forget()
+            labelc2.grid_forget()
             
         def showvisual():
             label.configure(text="Note that configuration will take effect after restart")
             cbutton1.grid_forget()
+            cbutton2.grid_forget()
+            buttonpath.grid_forget()
             buttonc1.grid(row=2, column=0, sticky="w")
             buttonc2.grid(row=3, column=0, sticky="w")
             labelc1.grid(row=2, column=1, sticky="w")
@@ -651,22 +767,34 @@ class SetupWindow(tk.Frame):
             color2_temp = colorc2[1]
             labelc2.configure(bg=color2_temp)
             color2.set(color2_temp)
+
+        def goback():
+            login_OK_temp = login_OK.get()
+            if login_OK_temp == 1:
+                controller.show_frame(LoginWindow)
+            else:
+                controller.show_frame(MainWindow)
                 
         selectbutton1 = tk.Button(self, text="System", command=showsystem)
         selectbutton1.grid(row=1, column=0, sticky="w")
         
         selectbutton2 = tk.Button(self, text="Visual", command=showvisual)
         selectbutton2.grid(row=1, column=1, sticky="w")
+
+        selectbutton3 = tk.Button(self, text="Updates", command=showupdates)
+        selectbutton3.grid(row=1, column=2, sticky="w")
             
         label = tk.Label(self, text="Select category")
         label.grid(row=3, columnspan=7)
         
         cbutton1 = tk.Checkbutton(self, text="Stay on top", variable=cvar1)        
+        cbutton2 = tk.Checkbutton(self, text="Auto-Update", variable=cvar2)
         
         buttons = tk.Button(self, text="Save", command=save)
         buttonsr = tk.Button(self, text="Save&Reset", command=save_reset)
+        buttonpath = tk.Button(self, text="Path to updates", command=set_path)
         
-        button = tk.Button(self, text="Go back", command=lambda: controller.show_frame(MainWindow))
+        button = tk.Button(self, text="Go back", command=goback)
         button.grid(row=4, column=0, sticky="w")
         
         buttonc1 = tk.Button(self, text="Color1", command=color1_choose)
@@ -676,9 +804,11 @@ class SetupWindow(tk.Frame):
         labelc2 = tk.Label(self, text="3:45:56")
         
         config = configparser.ConfigParser()
-        config.read("config.ini")
+        config.read(base_path+"config.ini")
         cvar1_temp = (config["setup"]["stay_on_top"])
         cvar1.set(cvar1_temp)
+        cvar2_temp = (config["system"]["autocheck"])
+        cvar2.set(cvar2_temp)
         color1_temp = str((config["visual"]["color1"]))
         color2_temp = str((config["visual"]["color2"]))
         color1.set(color1_temp)
@@ -709,6 +839,7 @@ class LoginWindow(tk.Frame):
         
         rem_var = tk.IntVar()
         rem_temp = 0
+        global login_OK
         login_OK = tk.IntVar()
         login_OK.set(0)
         login_temp = ""
@@ -716,6 +847,9 @@ class LoginWindow(tk.Frame):
 
         lunch_load = 0
         t_out_time = "0:00:00"
+
+        time_string = tk.StringVar()
+        time_string.set("0:00:00")
         
         def Set_Enum_1(self):
             global enum
@@ -992,17 +1126,17 @@ class LoginWindow(tk.Frame):
             
         def savetime():
             config = configparser.ConfigParser()
-            config.read("config.ini")
+            config.read(base_path+"config.ini")
             config.set("preset", "arrival_time", e1.get())
             config.set("preset", "work_time", e2.get())
             config.set("preset", "lunch_break", e3.get())
-            with open("config.ini", "w") as configfile:
+            with open(base_path+"config.ini", "w") as configfile:
                 config.write(configfile)
 
         def loginattempt():
             username = loginentry.get()
             password = passentry.get()
-            phantom_driver = os.getcwd()+"/data/phantomjs.exe"
+            phantom_driver = base_path+"phantomjs.exe"
             browser = webdriver.PhantomJS(phantom_driver, service_args=['--ignore-ssl-errors=true'])
             url = "http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp"
             try:
@@ -1014,6 +1148,7 @@ class LoginWindow(tk.Frame):
                 browser.find_element_by_css_selector('input[type=\"submit\"]').click()
                 if browser.current_url == url:
                     messagebox.showerror("Error","Wrong Password")
+                    browser.quit()
                     return
                 else:
                     pass
@@ -1022,10 +1157,17 @@ class LoginWindow(tk.Frame):
                 browser.switch_to.default_content()
                 browser.switch_to.frame(browser.find_element_by_name("report"))
                 content = browser.page_source
+                browser.switch_to.default_content()
+                browser.switch_to.frame(browser.find_element_by_name("toolbar"))
+                browser.find_element_by_css_selector("select#repId > option[value='19']").click()
+                browser.switch_to.default_content()
+                browser.switch_to.frame(browser.find_element_by_name("report"))
+                content_2 = browser.page_source
                 browser.quit()
             except NoSuchElementException:
                 messagebox.showerror("Error","WATT not accessible")
             soup=BeautifulSoup(content, "lxml")
+            soup_2=BeautifulSoup(content_2, "lxml")
             #get correct class
             now = dt.date.today()
             day = int(now.strftime("%d"))
@@ -1043,6 +1185,7 @@ class LoginWindow(tk.Frame):
                 pass
 
             #Lunch check
+            lunch_var = "0:30:00"
             try:        
                 for y in range (0,100):
                     if variables[y] == "Od Ob":
@@ -1055,14 +1198,13 @@ class LoginWindow(tk.Frame):
                         ob2 = dt.datetime.strptime(variables[int(y-5)],"%H:%M")
                         lunch_var = ob1 - ob2
                         lunch_load = 1
-                    else:
-                        lunch_var = "0:30:00"
-                    
-                    l_h, l_m, l_s  = str(lunch_var).split(':') 
-                    ev3.set(str(l_h+":"+l_m))
-                    
             except KeyError:
                 pass
+                    
+            l_h, l_m, l_s  = str(lunch_var).split(':') 
+            lunch_set = str(l_h+":"+l_m)
+            ev3.set(lunch_set)
+                    
             #Arrival set and check for medical
             if variables[4] == "Př Lé":
                 ev1.set("8:00")
@@ -1106,14 +1248,113 @@ class LoginWindow(tk.Frame):
             t_out_fin = dt.datetime.strptime(time_out_h,"%H") + dt.timedelta(minutes=int(time_out_m))
             t_out_time = str(t_out_fin.time())[:-3]
             ev5.set(t_out_time)
+
+            variables_today = {}
+            
+            try:
+                for row in range (0,100):
+                    for td in soup_2.find("td", text=day_string).parent.findAll('td')[row]:
+                        x = str(td)
+                        x1 = x.strip()
+                        variables_today [row] = x1
+            except IndexError:
+                pass
+
+            try:
+                work_today = variables_today [10]
+            except KeyError:
+                work_today = "0:00"
+
+            w1h, w1m = work_today.split(':')
+        
+            variables_sums = {}
+
+            try:
+                for row in range (0,100):
+                    for td in soup_2.find("tr", {"class":"sums"}).findAll('td')[row]:
+                        x = str(td)
+                        x1 = x.strip()
+                        variables_sums [row] = x1
+            except IndexError:
+                pass
+            try:
+                w2h, w2m = variables_sums[3].split(':')
+            except KeyError:
+                w2h = "0"
+                w2m = "00"
+            try:
+                w3h, w3m = variables_sums[11].split(':')
+            except KeyError:
+                w3h = "0"
+                w3m = "00"
+            try:
+                w4h, w4m = variables_sums[17].split(':')
+            except KeyError:
+                w4h = "0"
+                w4m = "00"
+            days_watt = variables_sums[2][:-3]
+            hours_normal = 8 * (int(days_watt) - 1)
+            #Datetime will not accept times over 24h....now add rest....
+            hours_watt = int(w2h)-int(w1h)+int(w3h)+int(w4h)
+            minutes_watt = int(w2m)-int(w1m)+int(w3m)+int(w4m)
+            hours_dis = hours_watt - hours_normal
+
+            try:
+                if hours_dis == minutes_watt == 0:
+                    time_temp = "0:00"
+                elif minutes_watt < 0:
+                    hours_f = hours_dis - 1
+                    minutes_f = 60 - minutes_watt
+                    if minutes_f == 0:
+                        minutes_f = "00"
+                    else:
+                        pass
+                    time_prep = str(hours_f)+":"+str(minutes_f)+":00"
+                    if hours_dis < 0 :
+                        time_temp = "minus "+str(time_prep)
+                    else:
+                        time_temp = "plus "+str(time_prep)
+                elif minutes_watt >= 0 and hours_dis >= 0 :
+                    hours_f = hours_dis
+                    minutes_f = minutes_watt
+                    if minutes_f == 0:
+                        minutes_f = "00"
+                    else:
+                        pass
+                    time_prep = str(hours_f)+":"+str(minutes_f)+":00"
+                    time_temp = "plus "+str(time_prep)
+                elif minutes_watt > 0 and hours_dis < 0 :
+                    hours_f = hours_dis + 1
+                    minutes_f = 60 - minutes_watt
+                    if minutes_f == 0:
+                        minutes_f = "00"
+                    else:
+                        pass
+                    time_prep = str(hours_f)+":"+str(minutes_f)+":00"
+                    time_temp = "minus "+str(time_prep)
+                elif minutes_watt >= 0 and hours_dis < 0 :
+                    hours_f = abs(hours_dis)
+                    minutes_f = minutes_watt
+                    if minutes_f == 0:
+                        minutes_f = "00"
+                    else:
+                        pass
+                    time_prep = str(hours_f)+":"+str(minutes_f)+":00"
+                    time_temp = "minus "+str(time_prep)
+                else:
+                    pass
+            except KeyError:
+                pass
+
+            time_string.set(time_temp)
             
             config = configparser.ConfigParser()
-            config.read("config.ini")
+            config.read(base_path+"config.ini")
             if rem_var.get() == 1:
                 config.set("login", "username", loginentry.get())
             else:
                 config.set("login", "username", "")
-            with open("config.ini", "w") as configfile:
+            with open(base_path+"config.ini", "w") as configfile:
                 config.write(configfile)
   
             login_OK.set(1)
@@ -1155,115 +1396,7 @@ class LoginWindow(tk.Frame):
                 pass
 
         def monthly_overview():
-            username = loginentry.get()
-            password = passentry.get()
-            phantom_driver = os.getcwd()+"/data/phantomjs.exe"
-            browser = webdriver.PhantomJS(phantom_driver, service_args=['--ignore-ssl-errors=true'])
-            url = "http://czbrq-s-apl0007.cz.abb.com:8080/reports/login.jsp"
-            try:
-                browser.get(url)
-                browser.find_element_by_id("uname").clear()
-                browser.find_element_by_id("uname").send_keys(username)
-                browser.find_element_by_id("pass").clear()
-                browser.find_element_by_id("pass").send_keys(password)
-                browser.find_element_by_css_selector('input[type=\"submit\"]').click()
-                if browser.current_url == url:
-                    messagebox.showerror("Error","Wrong Password")
-                    return
-                else:
-                    pass
-                browser.switch_to.frame(browser.find_element_by_name("toolbar"))
-                browser.find_element_by_css_selector("select#repId > option[value='19']").click()
-                browser.switch_to.default_content()
-                browser.switch_to.frame(browser.find_element_by_name("report"))
-                content = browser.page_source
-                browser.quit()
-            except NoSuchElementException:
-                messagebox.showerror("Error","WATT not accessible")
-            soup=BeautifulSoup(content, "lxml")
-            #get correct class
-            now = dt.date.today()
-            day = int(now.strftime("%d"))
-            day_string = str(day)+"."
-            #get times from table
-            variables_today = {}
-            try:
-                for row in range (0,100):
-                    for td in soup.find("td", text=day_string).parent.findAll('td')[row]:
-                        x = str(td)
-                        x1 = x.strip()
-                        variables_today [row] = x1
-            except IndexError:
-                pass
-
-            try:
-                work_today = variables_today [10]
-            except KeyError:
-                work_today = "0:00"
-
-            w1h, w1m = work_today.split(':')
-        
-            variables_sums = {}
-
-            try:
-                for row in range (0,100):
-                    for td in soup.find("tr", {"class":"sums"}).findAll('td')[row]:
-                        x = str(td)
-                        x1 = x.strip()
-                        variables_sums [row] = x1
-            except IndexError:
-                pass
-
-            w2h, w2m = variables_sums[3].split(':')
-            w3h, w3m = variables_sums[11].split(':')
-            w4h, w4m = variables_sums[17].split(':')
-            
-            days_watt = variables_sums[2][:-3]
-            hours_normal = 8 * (int(days_watt) - 1)
-            #Datetime will not accept times over 24h....now add rest....
-            hours_watt = int(w2h)-int(w1h)+int(w3h)+int(w4h)
-            minutes_watt = int(w2m)-int(w1m)+int(w3m)+int(w4m)
-            hours_dis = hours_watt - hours_normal
-            time_string = "0:00"
-            print(hours_dis)
-
-            if hours_dis == minutes_watt == 0:
-                time_string = "0:00"
-            elif minutes_watt < 0:
-                hours_f = hours_dis - 1
-                minutes_f = 60 - minutes_watt
-                time_prep = str(hours_f)+":"+str(minutes_f)
-                time_f = dt.datetime.strptime(time_prep, "%H:%M")
-                time_print = time_f.time()
-                if hours_dis < 0 :
-                    time_string = "minus "+str(time_print)
-                else:
-                    time_string = "plus "+str(time_print)
-            elif minutes_watt >= 0 and hours_dis >= 0 :
-                hours_f = hours_dis
-                minutes_f = minutes_watt
-                time_prep = str(hours_f)+":"+str(minutes_f)
-                time_f = dt.datetime.strptime(time_prep, "%H:%M")
-                time_print = time_f.time()
-                time_string = "plus "+str(time_print)
-            elif minutes_watt > 0 and hours_dis < 0 :
-                hours_f = hours_dis + 1
-                minutes_f = 60 - minutes_watt
-                time_prep = str(hours_f)+":"+str(minutes_f)
-                time_f = dt.datetime.strptime(time_prep, "%H:%M")
-                time_print = "-"+time_f.time()
-                time_string = "minus "+str(time_print)
-            elif minutes_watt >= 0 and hours_dis < 0 :
-                hours_f = abs(hours_dis)
-                minutes_f = minutes_watt
-                time_prep = str(hours_f)+":"+str(minutes_f)
-                time_f = dt.datetime.strptime(time_prep, "%H:%M")
-                time_print = str(time_f.time())
-                time_string = "minus "+time_print
-            else:
-                messagebox.showerror("Month overview", "Error, something is wrong.")
-                
-            balance = "Your time balance is "+time_string
+            balance = "Your time balance is "+time_string.get()
             messagebox.showinfo("Month overview", balance)
 
 
@@ -1273,23 +1406,23 @@ class LoginWindow(tk.Frame):
         e1["width"] = 5
         e1.config(bg="white", state="readonly", textvariable = ev1)
 
-        image3 = ImageTk.PhotoImage(file = os.getcwd()+"/data/undo_r.png")
+        image3 = ImageTk.PhotoImage(file = base_path+"undo_r.png")
         button3 = tk.Button(self, image=image3, fg="red", command=lambda: controller.show_frame(MainWindow))
         button3.image = image3
         
-        image4 = ImageTk.PhotoImage(file = os.getcwd()+"/data/setup_r.png")
+        image4 = ImageTk.PhotoImage(file = base_path+"setup_r.png")
         button4 = tk.Button(self, image=image4, fg="red", command=lambda: controller.show_frame(SetupWindow))
         button4.image = image4
         
-        image5 = ImageTk.PhotoImage(file = os.getcwd()+"/data/login_r.png")
+        image5 = ImageTk.PhotoImage(file = base_path+"login_r.png")
         button5 = tk.Button(self, image=image5, fg="red", command=loginaction_final)
         button5.image = image5
         
-        image6 = ImageTk.PhotoImage(file = os.getcwd()+"/data/about_r.png")
+        image6 = ImageTk.PhotoImage(file = base_path+"about_r.png")
         button6 = tk.Button(self, image=image6, fg="red", command=popupabout)
         button6.image = image6
 
-        image_monthly = ImageTk.PhotoImage(file = os.getcwd()+"/data/monthly_r.png")
+        image_monthly = ImageTk.PhotoImage(file = base_path+"monthly_r.png")
         button_monthly = tk.Button(self, image=image_monthly, command=monthly_overview)
         button_monthly.image = image_monthly
         
@@ -1362,11 +1495,9 @@ class LoginWindow(tk.Frame):
         back_button.bind("<Return>", lambda event: controller.show_frame(MainWindow))
         
         config = configparser.ConfigParser()
-        config.read("config.ini")
+        config.read(base_path+"config.ini")
         ev2_time = (config["preset"]["work_time"])
-        ev3_time = (config["preset"]["lunch_break"])
         ev2.set(ev2_time)
-        ev3.set(ev3_time)
         color1_temp = str((config["visual"]["color1"]))
         color2_temp = str((config["visual"]["color2"]))
         timeathome.configure(bg=color1_temp)
@@ -1483,7 +1614,7 @@ class LoginWindow(tk.Frame):
                 tk.Tk.iconify()
 
         tick1()
-        
+
 app = TimeWindow()
 app.resizable(0,0)
 app.mainloop()
