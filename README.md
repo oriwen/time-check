@@ -16,9 +16,10 @@ Features:
 - Minimalistic
 - Saving a session
 - Configuration
+- Monthly hours review (+- balance)
 
 Planned features:
-- Monthly hours review (+- balance)
+
 - Clock changing color according to remaining time 
 - Android version
 
